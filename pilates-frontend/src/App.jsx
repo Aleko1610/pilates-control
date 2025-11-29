@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
+import Sidebar from "./components/Sidebar";
 import Alumnos from "./pages/Alumnos";
 import ClasesPage from "./pages/ClasesPage";
 import ClaseDetalle from "./pages/ClaseDetalle";
@@ -7,12 +7,16 @@ import ClaseDetalle from "./pages/ClaseDetalle";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/alumnos" element={<Alumnos />} />
-        <Route path="/clases" element={<ClasesPage />} />
-        <Route path="/clases/:id" element={<ClaseDetalle />} />
-      </Routes>
+      <Sidebar />
+
+      <div style={{ marginLeft: "240px", padding: "20px" }}>
+        <Routes>
+          <Route path="/" element={<ClasesPage />} />
+          <Route path="/clases" element={<ClasesPage />} />
+          <Route path="/clases/:id" element={<ClaseDetalle />} />
+          <Route path="/alumnos" element={<Alumnos />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }

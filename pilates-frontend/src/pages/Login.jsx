@@ -1,60 +1,100 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Intentando login..."); // Para ver si llega acá
-    setError("");
 
-    try {
-      const res = await fetch("http://localhost:3000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      console.log(res); // ver si responde algo
-
-      const data = await res.json();
-      console.log(data); // ver el contenido
-
-      if (!res.ok) throw new Error(data.error);
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-
-      window.location.href = "/dashboard";
-    } catch (err) {
-      console.log("ERROR:", err.message);
-      setError(err.message);
+    if (!email || !password) {
+      setError("Completar usuario y contraseña");
+      return;
     }
+
+    fetch("http://localhost:3001/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          setError(data.error);
+        } else {
+          // Guardar sesión si hace falta más adelante
+          localStorage.setItem("token", data.token || "ok");
+          navigate("/clases");
+        }
+      })
+      .catch(() => setError("Error en el servidor"));
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
+    <div style={styles.container}>
+      <h2>Ingreso</h2>
+
+      <form onSubmit={handleSubmit} style={styles.form}>
         <input
-          type="text"
-          placeholder="Usuario"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={styles.input}
         />
         <input
           type="password"
           placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          style={styles.input}
         />
-        <button type="submit">Ingresar</button>
+
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        <button type="submit" style={styles.button}>
+          Entrar
+        </button>
       </form>
-      {error && <p>{error}</p>}
     </div>
   );
 }
+
+const styles = {
+  container: {
+    width: "100%",
+    maxWidth: "350px",
+    margin: "80px auto",
+    padding: "20px",
+    textAlign: "center",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    background: "#f8f8f8",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+  },
+  input: {
+    padding: "10px",
+    borderRadius: "5px",
+    border: "1px solid #bbb",
+    fontSize: "16px",
+  },
+  button: {
+    padding: "10px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "16px",
+  },
+};
 
 export default Login;
