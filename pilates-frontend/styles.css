@@ -1,0 +1,266 @@
+/* RESETEO BÁSICO */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f5f8;
+  color: #222;
+}
+
+/* LAYOUT GENERAL */
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 230px;
+  background: #1f2233;
+  color: #fff;
+  padding: 20px;
+}
+
+.logo {
+  font-size: 22px;
+  margin-bottom: 30px;
+  letter-spacing: .5px;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu li {
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+  background: #2b2f45;
+  transition: 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu li:hover {
+  background: #00C896;
+  color: #000;
+}
+
+/* CONTENIDO PRINCIPAL */
+.main-content {
+  flex: 1;
+  padding: 25px 30px;
+  overflow-y: auto;
+}
+
+section h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+/* FORMULARIOS */
+form {
+  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+form input,
+form select {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* TABLAS */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th {
+  background: #00C896;
+  color: #000;
+  padding: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+td {
+  padding: 6px 8px;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* BOTONES */
+button {
+  padding: 6px 10px;
+  border: none;
+  cursor: pointer;
+  background: #00A67A;
+  color: #fff;
+  border-radius: 6px;
+  transition: 0.2s;
+  font-size: 13px;
+}
+
+button:hover {
+  background: #00885f;
+}
+
+/* MODALES GENERALES */
+.modal {
+  display: none;
+  position: fixed;
+  top: 18%;
+  left: 22%;
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,.35);
+  min-width: 320px;
+  z-index: 1000;
+}
+
+/* KPI CARDS DASHBOARD */
+.kpi-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.kpi-card {
+  background: #ffffff;
+  border-radius: 15px;
+  padding: 18px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  transition: 0.3s;
+  cursor: default;
+}
+
+.kpi-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.kpi-card p {
+  font-size: 26px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 18px rgba(0,0,0,.15);
+}
+
+/* COLORES DE ESTADO */
+.success {
+  border-left: 5px solid #00C896;
+}
+
+.info {
+  border-left: 5px solid #007bff;
+}
+
+.warning {
+  border-left: 5px solid #f0b400;
+}
+
+.danger {
+  border-left: 5px solid #ff4d4d;
+}
+
+.full p {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+#dashVencimientos {
+  padding-left: 18px;
+}
+
+/* CHARTS */
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+  margin-top: 25px;
+}
+
+.chart-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,.08);
+}
+
+/* CALENDARIO */
+#calendar {
+  width: 100%;
+  height: calc(100vh - 120px);
+  min-height: 520px;
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+
+.fc-scrollgrid {
+  border-radius: 10px;
+}
+
+.fc-toolbar-title {
+  font-size: 20px !important;
+}
+
+.fc-daygrid-day-number {
+  font-size: 11px;
+}
+
+.fc-event {
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+/* RESPONSIVE BÁSICO */
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .menu {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .menu li {
+    margin-right: 8px;
+    margin-bottom: 6px;
+  }
+}

@@ -6,7 +6,15 @@ let claseEditando = null;
 let planEditando = null;
 let alumnoEditando = null;
 
-// =================== DOM ELEMENTS ===================
+// Charts
+let chartOcupacion = null;
+let chartAsistencia = null;
+let chartVencimientos = null;
+
+// Calendar
+let calendar = null;
+
+// ========== DOM ELEMENTS ==========
 const formAlumno = document.getElementById("formAlumno");
 const tablaAlumnos = document.getElementById("tablaAlumnos");
 
@@ -43,7 +51,8 @@ const editClaseTipoInput = document.getElementById("editClaseTipo");
 const modalReservas = document.getElementById("modalReservas");
 const tablaReservasClase = document.getElementById("tablaReservasClase");
 
-// =================== ALUMNOS ===================
+// ========== ALUMNOS ==========
+
 formAlumno.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -94,7 +103,7 @@ async function cargarAlumnos() {
 
 function seleccionarAlumno(id) {
   alumnoSeleccionado = id;
-  alert("Alumno seleccionado!");
+  alert("Alumno seleccionado");
 }
 
 function abrirEdicionAlumno(id, nombre, apellido, dni, tel, email) {
@@ -132,13 +141,14 @@ async function guardarEdicionAlumno() {
 }
 
 async function eliminarAlumno(id) {
-  if (!confirm("¿Seguro?")) return;
+  if (!confirm("¿Seguro que desea eliminar el alumno?")) return;
 
   await fetch(`${API_URL}/alumnos/${id}`, { method: "DELETE" });
   cargarAlumnos();
 }
 
-// =================== PLANES ===================
+// ========== PLANES ==========
+
 formPlan.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -199,6 +209,11 @@ function cerrarModal() {
 }
 
 async function confirmarAsignacion() {
+  if (!alumnoSeleccionado) {
+    alert("Primero seleccione un alumno");
+    return;
+  }
+
   const plan_id = selectPlan.value;
   const plan = planesGlobales.find(p => p.id == plan_id);
 
@@ -274,12 +289,13 @@ async function guardarEdicionPlan() {
 }
 
 async function eliminarPlan(id) {
-  if (!confirm("¿Seguro?")) return;
+  if (!confirm("¿Eliminar plan?")) return;
   await fetch(`${API_URL}/planes/${id}`, { method: "DELETE" });
   cargarPlanes();
 }
 
-// =================== CLASES ===================
+// ========== CLASES ==========
+
 formClase.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -299,6 +315,7 @@ formClase.addEventListener("submit", async (e) => {
 
   e.target.reset();
   cargarClases();
+  if (calendar) cargarEventosCalendar(calendar);
 });
 
 async function cargarClases() {
@@ -331,7 +348,7 @@ async function cargarClases() {
 
 async function reservarClase(id) {
   if (!alumnoSeleccionado) {
-    alert("Primero seleccioná un alumno!");
+    alert("Primero seleccioná un alumno");
     return;
   }
 
@@ -346,8 +363,10 @@ async function reservarClase(id) {
 
   const data = await res.json();
   if (data.error) alert(data.error);
+
   cargarClases();
   cargarPlanActivo(alumnoSeleccionado);
+  if (calendar) cargarEventosCalendar(calendar);
 }
 
 function abrirEdicionClase(id, dia, hora, cupo, profesor, tipo) {
@@ -382,15 +401,18 @@ async function guardarEdicionClase() {
 
   cerrarModalClaseEditar();
   cargarClases();
+  if (calendar) cargarEventosCalendar(calendar);
 }
 
 async function eliminarClase(id) {
   if (!confirm("¿Eliminar clase?")) return;
   await fetch(`${API_URL}/clases/${id}`, { method: "DELETE" });
   cargarClases();
+  if (calendar) cargarEventosCalendar(calendar);
 }
 
-// =================== RESERVAS / ASISTENCIA ===================
+// ========== RESERVAS / ASISTENCIA ==========
+
 async function mostrarReservas(clase_id) {
   const res = await fetch(`${API_URL}/reservas/clase/${clase_id}`);
   const reservas = res.ok ? await res.json() : [];
@@ -432,24 +454,22 @@ async function cancelarReserva(id) {
   await fetch(`${API_URL}/reservas/${id}`, { method: "DELETE" });
   modalReservas.style.display = "none";
   cargarClases();
+  if (calendar) cargarEventosCalendar(calendar);
 }
 
-// =================== DASHBOARD ===================
-async function cargarDashboard() {
+// ========== DASHBOARD (KPIs + CHARTS) ==========
 
-  // Total alumnos activos
+async function actualizarKPIs() {
   const resSub = await fetch(`${API_URL}/suscripciones/activas`);
   const subsActivas = await resSub.json();
   document.getElementById("dashTotalAlumnos").textContent = subsActivas.length;
 
-  // Clases hoy
   const hoy = new Date().toISOString().split("T")[0];
   const resClases = await fetch(`${API_URL}/clases`);
   const clases = await resClases.json();
   const clasesHoy = clases.filter(c => c.dia === hoy);
   document.getElementById("dashClasesHoy").textContent = clasesHoy.length;
 
-  // Ocupación promedio del día
   let totalLugares = 0;
   let totalOcupados = 0;
 
@@ -466,7 +486,6 @@ async function cargarDashboard() {
 
   document.getElementById("dashOcupacion").textContent = porcentaje + "%";
 
-  // Vencimientos próximos
   const resVenc = await fetch(`${API_URL}/suscripciones/vencimientos`);
   const vencimientos = await resVenc.json();
   const vencimientosList = document.getElementById("dashVencimientos");
@@ -490,16 +509,131 @@ async function cargarDashboard() {
   }
 }
 
-// =================== VISTAS ===================
+async function renderCharts() {
+  // destruir si ya existen
+  if (chartOcupacion) chartOcupacion.destroy();
+  if (chartAsistencia) chartAsistencia.destroy();
+  if (chartVencimientos) chartVencimientos.destroy();
+
+  const dias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+  const ocupacion = [10, 30, 50, 20, 40, 60, 25];
+  const asistencia = [12, 18, 16, 15, 9, 20, 14];
+  const venc = [1, 2, 3, 0, 5, 1, 0];
+
+  chartOcupacion = new Chart(document.getElementById("chartOcupacion"), {
+    type: "line",
+    data: {
+      labels: dias,
+      datasets: [{
+        label: "%",
+        data: ocupacion,
+        borderColor: "#00C896",
+        backgroundColor: "rgba(0,200,150,0.2)",
+        borderWidth: 2
+      }]
+    }
+  });
+
+  chartAsistencia = new Chart(document.getElementById("chartAsistencia"), {
+    type: "bar",
+    data: {
+      labels: dias,
+      datasets: [{
+        label: "Alumnos",
+        data: asistencia,
+        backgroundColor: "#007bff",
+      }]
+    }
+  });
+
+  chartVencimientos = new Chart(document.getElementById("chartVencimientos"), {
+    type: "bar",
+    data: {
+      labels: dias,
+      datasets: [{
+        label: "Vencimientos",
+        data: venc,
+        backgroundColor: "#ff4d4d",
+      }]
+    }
+  });
+}
+
+async function cargarDashboard() {
+  await actualizarKPIs();
+  await renderCharts();
+}
+
+// ========== CALENDARIO (FullCalendar) ==========
+
+function initCalendar() {
+  const calendarEl = document.getElementById('calendar');
+  if (!calendarEl) return;
+
+  calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'timeGridWeek',
+    locale: 'es',
+    selectable: true,
+    expandRows: true,
+    slotDuration: '00:30:00',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    dateClick: function(info) {
+      abrirFormClaseParaFecha(info.dateStr);
+    },
+    eventClick: function(info) {
+      const claseId = info.event.id;
+      mostrarReservas(claseId);
+    }
+  });
+
+  calendar.render();
+  cargarEventosCalendar(calendar);
+}
+
+async function cargarEventosCalendar(calendarInstance) {
+  const res = await fetch(`${API_URL}/clases`);
+  const clases = await res.json();
+
+  const eventos = clases.map(c => ({
+    id: c.id,
+    title: `${c.tipo_clase || "Clase"} (${c.cupo_maximo})`,
+    start: `${c.dia}T${c.hora}`,
+    backgroundColor: "#00C896",
+    borderColor: "#007b6e"
+  }));
+
+  calendarInstance.removeAllEvents();
+  calendarInstance.addEventSource(eventos);
+}
+
+function abrirFormClaseParaFecha(fechaStr) {
+  mostrarSeccion('clases');
+  document.getElementById("claseDia").value = fechaStr;
+}
+
+// ========== VISTAS / NAVEGACIÓN ==========
+
 function mostrarSeccion(id) {
   document.querySelectorAll("section").forEach(s => s.style.display = "none");
   document.getElementById(id).style.display = "block";
 
-  if (id === "dashboard") cargarDashboard();
+  if (id === "dashboard") {
+    cargarDashboard();
+  }
+
+  if (id === "calendarView" && calendar) {
+    cargarEventosCalendar(calendar);
+    calendar.updateSize();
+  }
 }
 
-// =================== INIT ===================
+// ========== INIT ==========
 cargarAlumnos();
 cargarPlanes();
 cargarClases();
-mostrarSeccion("dashboard");
+initCalendar();
+mostrarSeccion("calendarView");

@@ -4,177 +4,212 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pilates Control MVP</title>
+
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.6/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.6/index.global.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-  <!-- NAV -->
-  <nav style="background:#eee;padding:10px;">
-    <button onclick="mostrarSeccion('dashboard')">Dashboard</button>
-    <button onclick="mostrarSeccion('alumnos')">Alumnos</button>
-    <button onclick="mostrarSeccion('planes')">Planes</button>
-    <button onclick="mostrarSeccion('clases')">Clases</button>
-  </nav>
+  <div class="layout">
 
-  <!-- =================== DASHBOARD =================== -->
-  <section id="dashboard" style="display:block;">
-    <h2>Dashboard</h2>
+    <aside class="sidebar">
+      <h2 class="logo">PilatesControl</h2>
 
-    <div>
-      <h3>Total Alumnos Activos</h3>
-      <p id="dashTotalAlumnos">0</p>
-    </div>
+      <ul class="menu">
+        <li onclick="mostrarSeccion('calendarView')">📅 Calendario</li>
+        <li onclick="mostrarSeccion('dashboard')">📊 Dashboard</li>
+        <li onclick="mostrarSeccion('alumnos')">👤 Alumnos</li>
+        <li onclick="mostrarSeccion('planes')">💳 Planes</li>
+        <li onclick="mostrarSeccion('clases')">📅 Clases</li>
+      </ul>
+    </aside>
 
-    <div>
-      <h3>Clases Hoy</h3>
-      <p id="dashClasesHoy">0</p>
-    </div>
+    <main class="main-content">
 
-    <div>
-      <h3>Ocupación Promedio Hoy</h3>
-      <p id="dashOcupacion">0%</p>
-    </div>
+      <!-- ========== CALENDARIO ========== -->
+      <section id="calendarView" style="display:block;">
+        <h2>Calendario de Clases</h2>
+        <div id="calendar"></div>
+      </section>
 
-    <div>
-      <h3>Vencimientos Próximos (7 días)</h3>
-      <ul id="dashVencimientos"></ul>
-    </div>
+      <!-- ========== DASHBOARD ========== -->
+      <section id="dashboard" style="display:none;">
+        <h2>Dashboard</h2>
 
-  </section>
+        <div class="kpi-container">
 
-  <!-- =================== ALUMNOS =================== -->
-  <section id="alumnos" style="display:none;">
-    <h2>Alumnos</h2>
+          <div class="kpi-card success">
+            <h3>Alumnos Activos</h3>
+            <p id="dashTotalAlumnos">0</p>
+          </div>
 
-    <form id="formAlumno">
-      <input type="text" id="nombre" placeholder="Nombre" required />
-      <input type="text" id="apellido" placeholder="Apellido" required />
-      <input type="text" id="dni" placeholder="DNI" required />
-      <input type="text" id="telefono" placeholder="Teléfono" />
-      <input type="email" id="email" placeholder="Email" />
-      <button type="submit">Agregar Alumno</button>
-    </form>
+          <div class="kpi-card info">
+            <h3>Clases Hoy</h3>
+            <p id="dashClasesHoy">0</p>
+          </div>
 
-    <table border="1">
-      <thead>
-        <tr><th>Nombre</th><th>Apellido</th><th>DNI</th><th>Teléfono</th><th>Email</th><th>Plan</th><th>Acciones</th></tr>
-      </thead>
-      <tbody id="tablaAlumnos"></tbody>
-    </table>
-  </section>
+          <div class="kpi-card warning">
+            <h3>Ocupación Hoy</h3>
+            <p id="dashOcupacion">0%</p>
+          </div>
 
-  <!-- Modal Editar Alumno -->
-  <div id="modalAlumno" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
-    <h3>Editar Alumno</h3>
-    <input type="text" id="editNombre" placeholder="Nombre" />
-    <input type="text" id="editApellido" placeholder="Apellido" />
-    <input type="text" id="editDni" placeholder="DNI" />
-    <input type="text" id="editTel" placeholder="Teléfono" />
-    <input type="email" id="editEmail" placeholder="Email" />
-    <br><br>
-    <button onclick="guardarEdicionAlumno()">Guardar</button>
-    <button onclick="cerrarModalAlumno()">Cancelar</button>
-  </div>
+          <div class="kpi-card danger full">
+            <h3>Vencimientos Próximos</h3>
+            <ul id="dashVencimientos"></ul>
+          </div>
 
-  <!-- Modal Asignar Plan -->
-  <div id="modalPlan" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
-    <h3>Asignar Plan</h3>
-    <select id="selectPlan"></select>
-    <br><br>
-    <button onclick="confirmarAsignacion()">Confirmar</button>
-    <button onclick="cerrarModal()">Cancelar</button>
-  </div>
+        </div>
 
-  <!-- ================= PLANES ================= -->
-  <section id="planes" style="display:none;">
-    <h2>Planes</h2>
+        <div class="charts-container">
+          <div class="chart-card">
+            <h3>Ocupación (Últimos 7 días)</h3>
+            <canvas id="chartOcupacion"></canvas>
+          </div>
 
-    <form id="formPlan">
-      <input type="text" id="planNombre" placeholder="Nombre" required />
-      <select id="planTipo" required>
-        <option value="">Tipo</option>
-        <option value="tiempo">Tiempo</option>
-        <option value="creditos">Créditos</option>
-        <option value="mixto">Mixto</option>
-      </select>
-      <input type="number" id="planPrecio" placeholder="Precio" required />
-      <input type="number" id="planCreditos" placeholder="Créditos totales"/>
-      <input type="number" id="planDuracion" placeholder="Duración en días"/>
-      <button type="submit">Agregar</button>
-    </form>
+          <div class="chart-card">
+            <h3>Asistencia</h3>
+            <canvas id="chartAsistencia"></canvas>
+          </div>
 
-    <table border="1">
-      <thead>
-        <tr><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Créditos</th><th>Días</th><th>Acciones</th></tr>
-      </thead>
-      <tbody id="tablaPlanes"></tbody>
-    </table>
-  </section>
+          <div class="chart-card">
+            <h3>Vencimientos por Semana</h3>
+            <canvas id="chartVencimientos"></canvas>
+          </div>
+        </div>
+      </section>
 
-  <!-- Modal Editar Plan -->
-  <div id="modalPlanEditar" style="display:none; position:fixed; top:25%; left:25%; background:#fff; padding:20px; border:1px solid #000;">
-    <h3>Editar Plan</h3>
+      <!-- ========== ALUMNOS ========== -->
+      <section id="alumnos" style="display:none;">
+        <h2>Alumnos</h2>
 
-    <input type="text" id="editPlanNombre" placeholder="Nombre"/>
-    <select id="editPlanTipo">
-      <option value="tiempo">Tiempo</option>
-      <option value="creditos">Créditos</option>
-      <option value="mixto">Mixto</option>
-    </select>
-    <input type="number" id="editPlanPrecio" placeholder="Precio"/>
-    <input type="number" id="editPlanCreditos" placeholder="Créditos totales"/>
-    <input type="number" id="editPlanDuracion" placeholder="Duración en días"/>
+        <form id="formAlumno">
+          <input type="text" id="nombre" placeholder="Nombre" required />
+          <input type="text" id="apellido" placeholder="Apellido" required />
+          <input type="text" id="dni" placeholder="DNI" required />
+          <input type="text" id="telefono" placeholder="Teléfono" />
+          <input type="email" id="email" placeholder="Email" />
+          <button type="submit">Agregar Alumno</button>
+        </form>
 
-    <br><br>
-    <button onclick="guardarEdicionPlan()">Guardar</button>
-    <button onclick="cerrarModalPlanEditar()">Cancelar</button>
-  </div>
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Apellido</th><th>DNI</th><th>Teléfono</th><th>Email</th><th>Plan</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="tablaAlumnos"></tbody>
+        </table>
+      </section>
 
-  <!-- ================= CLASES ================= -->
-  <section id="clases" style="display:none;">
-    <h2>Clases</h2>
+      <div id="modalAlumno" class="modal">
+        <h3>Editar Alumno</h3>
+        <input type="text" id="editNombre" />
+        <input type="text" id="editApellido" />
+        <input type="text" id="editDni" />
+        <input type="text" id="editTel" />
+        <input type="email" id="editEmail" />
+        <br><br>
+        <button onclick="guardarEdicionAlumno()">Guardar</button>
+        <button onclick="cerrarModalAlumno()">Cancelar</button>
+      </div>
 
-    <form id="formClase">
-      <input type="date" id="claseDia" required />
-      <input type="time" id="claseHora" required />
-      <input type="number" id="claseCupo" placeholder="Cupo" required />
-      <input type="text" id="claseProfesor" placeholder="Profesor" />
-      <input type="text" id="claseTipo" placeholder="Tipo Clase" value="Pilates" />
-      <button type="submit">Crear Clase</button>
-    </form>
+      <div id="modalPlan" class="modal">
+        <h3>Asignar Plan</h3>
+        <select id="selectPlan"></select>
+        <br><br>
+        <button onclick="confirmarAsignacion()">Confirmar</button>
+        <button onclick="cerrarModal()">Cancelar</button>
+      </div>
 
-    <table border="1">
-      <thead><tr><th>Día</th><th>Hora</th><th>Profesor</th><th>Cupo</th><th>Reservados</th><th>Acciones</th></tr></thead>
-      <tbody id="tablaClases"></tbody>
-    </table>
-  </section>
+      <!-- ========== PLANES ========== -->
+      <section id="planes" style="display:none;">
+        <h2>Planes</h2>
 
-  <!-- Modal Editar Clase -->
-  <div id="modalClaseEditar"
-       style="display:none; position:fixed; top:22%; left:22%; background:#fff; padding:20px; border:1px solid #000;">
-    <h3>Editar Clase</h3>
-    <input type="date" id="editClaseDia" />
-    <input type="time" id="editClaseHora" />
-    <input type="number" id="editClaseCupo" placeholder="Cupo" />
-    <input type="text" id="editClaseProfesor" placeholder="Profesor" />
-    <input type="text" id="editClaseTipo" placeholder="Tipo" />
-    <br><br>
-    <button onclick="guardarEdicionClase()">Guardar</button>
-    <button onclick="cerrarModalClaseEditar()">Cancelar</button>
-  </div>
+        <form id="formPlan">
+          <input type="text" id="planNombre" placeholder="Nombre" required />
+          <select id="planTipo" required>
+            <option value="">Tipo</option>
+            <option value="tiempo">Tiempo</option>
+            <option value="creditos">Créditos</option>
+            <option value="mixto">Mixto</option>
+          </select>
+          <input type="number" id="planPrecio" placeholder="Precio" required />
+          <input type="number" id="planCreditos" placeholder="Créditos" />
+          <input type="number" id="planDuracion" placeholder="Duración en días" />
+          <button type="submit">Agregar</button>
+        </form>
 
-  <!-- Modal Reservas -->
-  <div id="modalReservas" 
-       style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
-    <h3>Reservas de Clase</h3>
-    <table border="1">
-      <thead>
-        <tr><th>Alumno</th><th>Presente</th><th>Acciones</th></tr>
-      </thead>
-      <tbody id="tablaReservasClase"></tbody>
-    </table>
-    <br>
-    <button onclick="cerrarModalReservas()">Cerrar</button>
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Créditos</th><th>Días</th><th>Acciones</th></tr>
+          </thead>
+          <tbody id="tablaPlanes"></tbody>
+        </table>
+      </section>
+
+      <div id="modalPlanEditar" class="modal">
+        <h3>Editar Plan</h3>
+        <input type="text" id="editPlanNombre" />
+        <select id="editPlanTipo">
+          <option value="tiempo">Tiempo</option>
+          <option value="creditos">Créditos</option>
+          <option value="mixto">Mixto</option>
+        </select>
+        <input type="number" id="editPlanPrecio" />
+        <input type="number" id="editPlanCreditos" />
+        <input type="number" id="editPlanDuracion" />
+        <br><br>
+        <button onclick="guardarEdicionPlan()">Guardar</button>
+        <button onclick="cerrarModalPlanEditar()">Cancelar</button>
+      </div>
+
+      <!-- ========== CLASES ========== -->
+      <section id="clases" style="display:none;">
+        <h2>Clases</h2>
+
+        <form id="formClase">
+          <input type="date" id="claseDia" required />
+          <input type="time" id="claseHora" required />
+          <input type="number" id="claseCupo" placeholder="Cupo" required />
+          <input type="text" id="claseProfesor" placeholder="Profesor" />
+          <input type="text" id="claseTipo" placeholder="Tipo Clase" value="Pilates" />
+          <button type="submit">Crear Clase</button>
+        </form>
+
+        <table>
+          <thead><tr><th>Día</th><th>Hora</th><th>Profesor</th><th>Cupo</th><th>Reservados</th><th>Acciones</th></tr></thead>
+          <tbody id="tablaClases"></tbody>
+        </table>
+      </section>
+
+      <div id="modalClaseEditar" class="modal">
+        <h3>Editar Clase</h3>
+        <input type="date" id="editClaseDia" />
+        <input type="time" id="editClaseHora" />
+        <input type="number" id="editClaseCupo" />
+        <input type="text" id="editClaseProfesor" />
+        <input type="text" id="editClaseTipo" />
+        <br><br>
+        <button onclick="guardarEdicionClase()">Guardar</button>
+        <button onclick="cerrarModalClaseEditar()">Cancelar</button>
+      </div>
+
+      <div id="modalReservas" class="modal">
+        <h3>Reservas de Clase</h3>
+        <table>
+          <thead><tr><th>Alumno</th><th>Presente</th><th>Acciones</th></tr></thead>
+          <tbody id="tablaReservasClase"></tbody>
+        </table>
+        <br>
+        <button onclick="cerrarModalReservas()">Cerrar</button>
+      </div>
+
+    </main>
   </div>
 
   <script src="script.js"></script>
