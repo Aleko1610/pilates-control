@@ -22,4 +22,43 @@ router.get('/', (req, res) => {
   });
 });
 
+router.put('/:id', (req, res) => {
+  const { id } = req.params;
+  const { nombre, tipo_plan, precio, creditos_totales, duracion_dias } = req.body;
+
+  const sql = `
+    UPDATE planes
+    SET nombre=?, tipo_plan=?, precio=?, creditos_totales=?, duracion_dias=?
+    WHERE id=?
+  `;
+  db.run(sql, [nombre, tipo_plan, precio, creditos_totales, duracion_dias, id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ mensaje: "Plan actualizado" });
+  });
+});
+
+router.delete('/:id', (req, res) => {
+  const { id } = req.params;
+
+  const sqlCheck = `
+    SELECT COUNT(*) as total
+    FROM suscripciones
+    WHERE plan_id = ? AND estado = 'activa'
+  `;
+
+  db.get(sqlCheck, [id], (err, row) => {
+    if (row.total > 0) {
+      return res.status(400).json({
+        error: "No se puede eliminar: el plan está en uso por alumnos activos"
+      });
+    }
+
+    db.run(`DELETE FROM planes WHERE id=?`, [id], err => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ mensaje: "Plan eliminado" });
+    });
+  });
+});
+
+
 module.exports = router;

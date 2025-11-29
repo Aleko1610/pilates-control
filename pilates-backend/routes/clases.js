@@ -22,4 +22,44 @@ router.get('/', (req, res) => {
   });
 });
 
+router.put('/:id', (req, res) => {
+  const { id } = req.params;
+  const { dia, hora, cupo_maximo, profesor, tipo_clase } = req.body;
+
+  const sql = `
+    UPDATE clases
+    SET dia = ?, hora = ?, cupo_maximo = ?, profesor = ?, tipo_clase = ?
+    WHERE id = ?
+  `;
+
+  db.run(sql, [dia, hora, cupo_maximo, profesor, tipo_clase, id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ mensaje: "Clase actualizada" });
+  });
+});
+
+router.delete('/:id', (req, res) => {
+  const { id } = req.params;
+
+  const sqlCheck = `
+    SELECT COUNT(*) AS total 
+    FROM reservas 
+    WHERE clase_id = ?
+  `;
+
+  db.get(sqlCheck, [id], (err, row) => {
+    if (row.total > 0) {
+      return res.status(400).json({
+        error: "No se puede eliminar: la clase tiene reservas"
+      });
+    }
+
+    db.run(`DELETE FROM clases WHERE id=?`, [id], err => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ mensaje: "Clase eliminada" });
+    });
+  });
+});
+
+
 module.exports = router;

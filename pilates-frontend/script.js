@@ -2,11 +2,52 @@ const API_URL = "http://localhost:3001";
 
 let alumnoSeleccionado = null;
 let planesGlobales = [];
+let claseEditando = null;
+let planEditando = null;
+let alumnoEditando = null;
 
-// -------------------- ALUMNOS --------------------
+// === REFERENCIAS DOM ===
+const formAlumno = document.getElementById("formAlumno");
+const tablaAlumnos = document.getElementById("tablaAlumnos");
 
-document.getElementById("formAlumno").addEventListener("submit", async (e) => {
+const modalAlumno = document.getElementById("modalAlumno");
+const editNombreInput = document.getElementById("editNombre");
+const editApellidoInput = document.getElementById("editApellido");
+const editDniInput = document.getElementById("editDni");
+const editTelInput = document.getElementById("editTel");
+const editEmailInput = document.getElementById("editEmail");
+
+const modalPlanAsignar = document.getElementById("modalPlan");
+const selectPlan = document.getElementById("selectPlan");
+
+const formPlan = document.getElementById("formPlan");
+const tablaPlanes = document.getElementById("tablaPlanes");
+
+const modalPlanEditar = document.getElementById("modalPlanEditar");
+const editPlanNombreInput = document.getElementById("editPlanNombre");
+const editPlanTipoSelect = document.getElementById("editPlanTipo");
+const editPlanPrecioInput = document.getElementById("editPlanPrecio");
+const editPlanCreditosInput = document.getElementById("editPlanCreditos");
+const editPlanDuracionInput = document.getElementById("editPlanDuracion");
+
+const formClase = document.getElementById("formClase");
+const tablaClases = document.getElementById("tablaClases");
+
+const modalClaseEditar = document.getElementById("modalClaseEditar");
+const editClaseDiaInput = document.getElementById("editClaseDia");
+const editClaseHoraInput = document.getElementById("editClaseHora");
+const editClaseCupoInput = document.getElementById("editClaseCupo");
+const editClaseProfesorInput = document.getElementById("editClaseProfesor");
+const editClaseTipoInput = document.getElementById("editClaseTipo");
+
+const modalReservas = document.getElementById("modalReservas");
+const tablaReservasClase = document.getElementById("tablaReservasClase");
+
+// =================== ALUMNOS ===================
+
+formAlumno.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const nuevoAlumno = {
     nombre: document.getElementById("nombre").value,
     apellido: document.getElementById("apellido").value,
@@ -29,11 +70,10 @@ async function cargarAlumnos() {
   const res = await fetch(`${API_URL}/alumnos`);
   const alumnos = await res.json();
 
-  const tbody = document.getElementById("tablaAlumnos");
-  tbody.innerHTML = "";
+  tablaAlumnos.innerHTML = "";
 
   alumnos.forEach(a => {
-    tbody.innerHTML += `
+    tablaAlumnos.innerHTML += `
       <tr>
         <td>${a.nombre}</td>
         <td>${a.apellido}</td>
@@ -42,29 +82,75 @@ async function cargarAlumnos() {
         <td>${a.email || "-"}</td>
         <td id="plan-${a.id}">-</td>
         <td>
-  <button onclick="seleccionarAlumno(${a.id})">Seleccionar</button>
-  <button onclick="abrirEdicionAlumno(${a.id}, '${a.nombre}', '${a.apellido}', '${a.dni}', '${a.telefono}', '${a.email}')">Editar</button>
-  <button onclick="eliminarAlumno(${a.id})">Eliminar</button>
-  <button onclick="abrirAsignacion(${a.id})">Asignar Plan</button>
-</td>
+          <button onclick="seleccionarAlumno(${a.id})">Seleccionar</button>
+          <button onclick="abrirEdicionAlumno(${a.id}, '${a.nombre}', '${a.apellido}', '${a.dni}', '${a.telefono || ""}', '${a.email || ""}')">Editar</button>
+          <button onclick="eliminarAlumno(${a.id})">Eliminar</button>
+          <button onclick="abrirAsignacion(${a.id})">Asignar Plan</button>
+        </td>
       </tr>
     `;
-
     cargarPlanActivo(a.id);
   });
 }
 
 function seleccionarAlumno(id) {
   alumnoSeleccionado = id;
-  alert("Alumno seleccionado correctamente!");
+  alert("Alumno seleccionado correctamente");
 }
 
-// -------------------- PLANES --------------------
+function abrirEdicionAlumno(id, nombre, apellido, dni, tel, email) {
+  alumnoEditando = id;
+  editNombreInput.value = nombre;
+  editApellidoInput.value = apellido;
+  editDniInput.value = dni;
+  editTelInput.value = tel;
+  editEmailInput.value = email;
+  modalAlumno.style.display = "block";
+}
 
-document.getElementById("formPlan").addEventListener("submit", async (e) => {
+function cerrarModalAlumno() {
+  modalAlumno.style.display = "none";
+  alumnoEditando = null;
+}
+
+async function guardarEdicionAlumno() {
+  const updated = {
+    nombre: editNombreInput.value,
+    apellido: editApellidoInput.value,
+    dni: editDniInput.value,
+    telefono: editTelInput.value,
+    email: editEmailInput.value
+  };
+
+  const res = await fetch(`${API_URL}/alumnos/${alumnoEditando}`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(updated)
+  });
+
+  const data = await res.json();
+  if (data.error) alert(data.error);
+
+  cerrarModalAlumno();
+  cargarAlumnos();
+}
+
+async function eliminarAlumno(id) {
+  if (!confirm("¿Seguro que querés eliminar este alumno?")) return;
+
+  const res = await fetch(`${API_URL}/alumnos/${id}`, { method: "DELETE" });
+  const data = await res.json();
+  if (data.error) alert(data.error);
+
+  cargarAlumnos();
+}
+
+// =================== PLANES ===================
+
+formPlan.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const nuevoPlan = {
+  const newPlan = {
     nombre: document.getElementById("planNombre").value,
     tipo_plan: document.getElementById("planTipo").value,
     precio: parseFloat(document.getElementById("planPrecio").value),
@@ -75,7 +161,7 @@ document.getElementById("formPlan").addEventListener("submit", async (e) => {
   await fetch(`${API_URL}/planes`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(nuevoPlan)
+    body: JSON.stringify(newPlan)
   });
 
   e.target.reset();
@@ -86,42 +172,42 @@ async function cargarPlanes() {
   const res = await fetch(`${API_URL}/planes`);
   planesGlobales = await res.json();
 
-  const tbody = document.getElementById("tablaPlanes");
-  tbody.innerHTML = "";
+  tablaPlanes.innerHTML = "";
 
   planesGlobales.forEach(p => {
-    tbody.innerHTML += `
+    tablaPlanes.innerHTML += `
       <tr>
         <td>${p.nombre}</td>
         <td>${p.tipo_plan}</td>
         <td>$ ${p.precio}</td>
         <td>${p.creditos_totales ?? "-"}</td>
         <td>${p.duracion_dias ?? "-"}</td>
+        <td>
+          <button onclick="abrirEdicionPlan(${p.id}, '${p.nombre}', '${p.tipo_plan}', ${p.precio}, ${p.creditos_totales ?? 'null'}, ${p.duracion_dias ?? 'null'})">Editar</button>
+          <button onclick="eliminarPlan(${p.id})">Eliminar</button>
+        </td>
       </tr>
     `;
   });
 }
 
-// Modal plan
 function abrirAsignacion(alumno_id) {
   alumnoSeleccionado = alumno_id;
-  const sel = document.getElementById("selectPlan");
-  sel.innerHTML = "";
+  selectPlan.innerHTML = "";
 
   planesGlobales.forEach(p => {
-    sel.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+    selectPlan.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
   });
 
-  document.getElementById("modalPlan").style.display = "block";
+  modalPlanAsignar.style.display = "block";
 }
 
 function cerrarModal() {
-  document.getElementById("modalPlan").style.display = "none";
-  alumnoSeleccionado = null;
+  modalPlanAsignar.style.display = "none";
 }
 
 async function confirmarAsignacion() {
-  const plan_id = document.getElementById("selectPlan").value;
+  const plan_id = selectPlan.value;
   const plan = planesGlobales.find(p => p.id == plan_id);
 
   let fecha_fin = null;
@@ -162,13 +248,59 @@ async function cargarPlanActivo(alumno_id) {
 
   const data = await res.json();
   const celda = document.getElementById(`plan-${alumno_id}`);
-
   if (celda) celda.textContent = data ? data.plan_nombre : "Sin plan";
 }
 
-// -------------------- CLASES --------------------
+function abrirEdicionPlan(id, nombre, tipo, precio, creditos, duracion) {
+  planEditando = id;
+  editPlanNombreInput.value = nombre;
+  editPlanTipoSelect.value = tipo;
+  editPlanPrecioInput.value = precio;
+  editPlanCreditosInput.value = creditos || "";
+  editPlanDuracionInput.value = duracion || "";
+  modalPlanEditar.style.display = "block";
+}
 
-document.getElementById("formClase").addEventListener("submit", async (e) => {
+function cerrarModalPlanEditar() {
+  modalPlanEditar.style.display = "none";
+  planEditando = null;
+}
+
+async function guardarEdicionPlan() {
+  const updated = {
+    nombre: editPlanNombreInput.value,
+    tipo_plan: editPlanTipoSelect.value,
+    precio: parseFloat(editPlanPrecioInput.value),
+    creditos_totales: editPlanCreditosInput.value || null,
+    duracion_dias: editPlanDuracionInput.value || null
+  };
+
+  const res = await fetch(`${API_URL}/planes/${planEditando}`, {
+    method: "PUT",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(updated)
+  });
+
+  const data = await res.json();
+  if (data.error) alert(data.error);
+
+  cerrarModalPlanEditar();
+  cargarPlanes();
+}
+
+async function eliminarPlan(id) {
+  if (!confirm("¿Seguro que querés eliminar este plan?")) return;
+
+  const res = await fetch(`${API_URL}/planes/${id}`, { method: "DELETE" });
+  const data = await res.json();
+  if (data.error) alert(data.error);
+
+  cargarPlanes();
+}
+
+// =================== CLASES ===================
+
+formClase.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const nuevaClase = {
@@ -193,15 +325,14 @@ async function cargarClases() {
   const res = await fetch(`${API_URL}/clases`);
   const clases = await res.json();
 
-  const tbody = document.getElementById("tablaClases");
-  tbody.innerHTML = "";
+  tablaClases.innerHTML = "";
 
   for (const c of clases) {
     const r = await fetch(`${API_URL}/reservas/clase/${c.id}`);
     let reservas = [];
     if (r.ok) reservas = await r.json();
 
-    tbody.innerHTML += `
+    tablaClases.innerHTML += `
       <tr>
         <td>${c.dia}</td>
         <td>${c.hora}</td>
@@ -210,16 +341,18 @@ async function cargarClases() {
         <td>${reservas.length}</td>
         <td>
           <button onclick="reservarClase(${c.id})">Reservar</button>
-          <button onclick="mostrarReservas(${c.id})">Ver reservas</button>
+          <button onclick="mostrarReservas(${c.id})">Ver</button>
+          <button onclick="abrirEdicionClase(${c.id}, '${c.dia}', '${c.hora}', ${c.cupo_maximo}, '${c.profesor || ""}', '${c.tipo_clase || ""}')">Editar</button>
+          <button onclick="eliminarClase(${c.id})">Eliminar</button>
         </td>
       </tr>
     `;
   }
 }
 
-async function reservarClase(clase_id) {
+async function reservarClase(id) {
   if (!alumnoSeleccionado) {
-    alert("Primero seleccione un alumno con Asignar Plan");
+    alert("Primero seleccioná un alumno");
     return;
   }
 
@@ -227,88 +360,42 @@ async function reservarClase(clase_id) {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
-      clase_id,
+      clase_id: id,
       alumno_id: alumnoSeleccionado
     })
   });
 
   const data = await res.json();
-
   if (data.error) alert(data.error);
-  else {
-    alert("Reserva realizada!");
-    cargarClases();
-    cargarPlanActivo(alumnoSeleccionado);
-  }
+  cargarClases();
+  cargarPlanActivo(alumnoSeleccionado);
 }
 
-// -------------------- ASISTENCIA --------------------
-
-async function mostrarReservas(clase_id) {
-  const res = await fetch(`${API_URL}/reservas/clase/${clase_id}`);
-  let reservas = [];
-  if (res.ok) reservas = await res.json();
-
-  const tbody = document.getElementById("tablaReservasClase");
-  tbody.innerHTML = "";
-
-  reservas.forEach(r => {
-    tbody.innerHTML += `
-      <tr>
-        <td>${r.nombre} ${r.apellido}</td>
-        <td>
-          <input type="checkbox" 
-            onchange="marcarAsistencia(${r.id}, this.checked)"
-            ${r.presente ? "checked" : ""}
-          >
-        </td>
-      </tr>
-    `;
-  });
-
-  document.getElementById("modalReservas").style.display = "block";
+function abrirEdicionClase(id, dia, hora, cupo, profesor, tipo) {
+  claseEditando = id;
+  editClaseDiaInput.value = dia;
+  editClaseHoraInput.value = hora;
+  editClaseCupoInput.value = cupo;
+  editClaseProfesorInput.value = profesor || "";
+  editClaseTipoInput.value = tipo || "Pilates";
+  modalClaseEditar.style.display = "block";
 }
 
-async function marcarAsistencia(reserva_id, presente) {
-  await fetch(`${API_URL}/reservas/${reserva_id}/presente`, {
-    method: "PATCH",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ presente: presente ? 1 : 0 })
-  });
+function cerrarModalClaseEditar() {
+  modalClaseEditar.style.display = "none";
+  claseEditando = null;
 }
 
-function cerrarModalReservas() {
-  document.getElementById("modalReservas").style.display = "none";
-}
-
-let alumnoEditando = null;
-
-function abrirEdicionAlumno(id, nombre, apellido, dni, telefono, email) {
-  alumnoEditando = id;
-  document.getElementById("editNombre").value = nombre;
-  document.getElementById("editApellido").value = apellido;
-  document.getElementById("editDni").value = dni;
-  document.getElementById("editTel").value = telefono;
-  document.getElementById("editEmail").value = email;
-
-  document.getElementById("modalAlumno").style.display = "block";
-}
-
-function cerrarModalAlumno() {
-  document.getElementById("modalAlumno").style.display = "none";
-  alumnoEditando = null;
-}
-
-async function guardarEdicionAlumno() {
+async function guardarEdicionClase() {
   const updated = {
-    nombre: document.getElementById("editNombre").value,
-    apellido: document.getElementById("editApellido").value,
-    dni: document.getElementById("editDni").value,
-    telefono: document.getElementById("editTel").value,
-    email: document.getElementById("editEmail").value
+    dia: editClaseDiaInput.value,
+    hora: editClaseHoraInput.value,
+    cupo_maximo: parseInt(editClaseCupoInput.value),
+    profesor: editClaseProfesorInput.value,
+    tipo_clase: editClaseTipoInput.value
   };
 
-  const res = await fetch(`${API_URL}/alumnos/${alumnoEditando}`, {
+  const res = await fetch(`${API_URL}/clases/${claseEditando}`, {
     method: "PUT",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(updated)
@@ -317,25 +404,73 @@ async function guardarEdicionAlumno() {
   const data = await res.json();
   if (data.error) alert(data.error);
 
-  cerrarModalAlumno();
-  cargarAlumnos();
+  cerrarModalClaseEditar();
+  cargarClases();
 }
 
-async function eliminarAlumno(id) {
-  if (!confirm("¿Seguro que querés eliminar este alumno?")) return;
+async function eliminarClase(id) {
+  if (!confirm("¿Seguro que querés eliminar esta clase?")) return;
 
-  const res = await fetch(`${API_URL}/alumnos/${id}`, {
-    method: "DELETE"
-  });
-
+  const res = await fetch(`${API_URL}/clases/${id}`, { method: "DELETE" });
   const data = await res.json();
   if (data.error) alert(data.error);
-  else alert("Alumno eliminado correctamente");
 
-  cargarAlumnos();
+  cargarClases();
 }
 
-// -------------------- INICIALIZAR --------------------
+// =================== RESERVAS / ASISTENCIA ===================
+
+async function mostrarReservas(clase_id) {
+  const res = await fetch(`${API_URL}/reservas/clase/${clase_id}`);
+  let reservas = [];
+  if (res.ok) reservas = await res.json();
+
+  tablaReservasClase.innerHTML = "";
+
+  reservas.forEach(r => {
+    tablaReservasClase.innerHTML += `
+      <tr>
+        <td>${r.nombre} ${r.apellido}</td>
+        <td>
+          <input type="checkbox"
+            onchange="marcarAsistencia(${r.id}, this.checked)"
+            ${r.presente ? "checked" : ""}
+          >
+        </td>
+        <td>
+          <button onclick="cancelarReserva(${r.id})">Cancelar</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  modalReservas.style.display = "block";
+}
+
+function cerrarModalReservas() {
+  modalReservas.style.display = "none";
+}
+
+async function marcarAsistencia(id, checked) {
+  await fetch(`${API_URL}/reservas/${id}/presente`, {
+    method: "PATCH",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ presente: checked ? 1 : 0 })
+  });
+}
+
+async function cancelarReserva(id) {
+  if (!confirm("¿Cancelar esta reserva?")) return;
+
+  const res = await fetch(`${API_URL}/reservas/${id}`, { method: "DELETE" });
+  const data = await res.json();
+  if (data.error) alert(data.error);
+
+  modalReservas.style.display = "none";
+  cargarClases();
+}
+
+// =================== INICIO ===================
 
 cargarAlumnos();
 cargarPlanes();

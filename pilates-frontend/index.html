@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pilates Control MVP</title>
 </head>
-<body>
-  <h1>Pilates Control</h1>
 
-  <!-- Alumnos -->
+<body>
+  <h1>Pilates Control MVP</h1>
+
+  <!-- ================= ALUMNOS ================= -->
+
   <h2>Alumnos</h2>
+
   <form id="formAlumno">
     <input type="text" id="nombre" placeholder="Nombre" required />
     <input type="text" id="apellido" placeholder="Apellido" required />
@@ -22,16 +25,46 @@
   <table border="1">
     <thead>
       <tr>
-        <th>Nombre</th><th>Apellido</th><th>DNI</th><th>Teléfono</th><th>Email</th><th>Plan</th><th>Acción</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>DNI</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Plan</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody id="tablaAlumnos"></tbody>
   </table>
 
-  <hr />
+  <!-- Modal Editar Alumno -->
+  <div id="modalAlumno" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
+    <h3>Editar Alumno</h3>
+    <input type="text" id="editNombre" placeholder="Nombre" />
+    <input type="text" id="editApellido" placeholder="Apellido" />
+    <input type="text" id="editDni" placeholder="DNI" />
+    <input type="text" id="editTel" placeholder="Teléfono" />
+    <input type="email" id="editEmail" placeholder="Email" />
+    <br><br>
+    <button onclick="guardarEdicionAlumno()">Guardar</button>
+    <button onclick="cerrarModalAlumno()">Cancelar</button>
+  </div>
 
-  <!-- Planes -->
+  <!-- Modal Asignar Plan -->
+  <div id="modalPlan" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
+    <h3>Asignar Plan</h3>
+    <select id="selectPlan"></select>
+    <br><br>
+    <button onclick="confirmarAsignacion()">Confirmar</button>
+    <button onclick="cerrarModal()">Cancelar</button>
+  </div>
+
+  <hr/>
+
+  <!-- ================= PLANES ================= -->
+
   <h2>Planes</h2>
+
   <form id="formPlan">
     <input type="text" id="planNombre" placeholder="Nombre" required />
     <select id="planTipo" required>
@@ -48,24 +81,44 @@
 
   <table border="1">
     <thead>
-      <tr><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Créditos</th><th>Días</th></tr>
+      <tr>
+        <th>Nombre</th>
+        <th>Tipo</th>
+        <th>Precio</th>
+        <th>Créditos</th>
+        <th>Días</th>
+        <th>Acciones</th>
+      </tr>
     </thead>
     <tbody id="tablaPlanes"></tbody>
   </table>
 
-  <!-- ModalAsignarPlan -->
-  <div id="modalPlan" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
-    <h3>Asignar Plan</h3>
-    <select id="selectPlan"></select>
+  <!-- Modal Editar Plan -->
+  <div id="modalPlanEditar" 
+       style="display:none; position:fixed; top:25%; left:25%; background:#fff; padding:20px; border:1px solid #000;">
+    <h3>Editar Plan</h3>
+
+    <input type="text" id="editPlanNombre" placeholder="Nombre"/>
+    <select id="editPlanTipo">
+      <option value="tiempo">Tiempo</option>
+      <option value="creditos">Créditos</option>
+      <option value="mixto">Mixto</option>
+    </select>
+    <input type="number" id="editPlanPrecio" placeholder="Precio"/>
+    <input type="number" id="editPlanCreditos" placeholder="Créditos totales"/>
+    <input type="number" id="editPlanDuracion" placeholder="Duración en días"/>
+
     <br><br>
-    <button onclick="confirmarAsignacion()">Confirmar</button>
-    <button onclick="cerrarModal()">Cancelar</button>
+    <button onclick="guardarEdicionPlan()">Guardar</button>
+    <button onclick="cerrarModalPlanEditar()">Cancelar</button>
   </div>
 
-  <hr />
+  <hr/>
 
-  <!-- Clases -->
+  <!-- ================= CLASES ================= -->
+
   <h2>Clases</h2>
+
   <form id="formClase">
     <input type="date" id="claseDia" required />
     <input type="time" id="claseHora" required />
@@ -78,35 +131,46 @@
   <table border="1">
     <thead>
       <tr>
-        <th>Día</th><th>Hora</th><th>Profesor</th><th>Cupo</th><th>Reservados</th><th>Acciones</th>
+        <th>Día</th>
+        <th>Hora</th>
+        <th>Profesor</th>
+        <th>Cupo</th>
+        <th>Reservados</th>
+        <th>Acciones</th>
       </tr>
     </thead>
     <tbody id="tablaClases"></tbody>
   </table>
 
-  <!-- ModalReservas -->
-  <div id="modalReservas" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
+  <!-- Modal Editar Clase -->
+  <div id="modalClaseEditar"
+       style="display:none; position:fixed; top:22%; left:22%; background:#fff; padding:20px; border:1px solid #000;">
+    <h3>Editar Clase</h3>
+    <input type="date" id="editClaseDia" />
+    <input type="time" id="editClaseHora" />
+    <input type="number" id="editClaseCupo" placeholder="Cupo" />
+    <input type="text" id="editClaseProfesor" placeholder="Profesor" />
+    <input type="text" id="editClaseTipo" placeholder="Tipo" />
+    <br><br>
+    <button onclick="guardarEdicionClase()">Guardar</button>
+    <button onclick="cerrarModalClaseEditar()">Cancelar</button>
+  </div>
+
+  <!-- Modal Reservas de Clase -->
+  <div id="modalReservas" 
+       style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
     <h3>Reservas de Clase</h3>
     <table border="1">
-      <thead><tr><th>Alumno</th><th>Presente</th></tr></thead>
+      <thead>
+        <tr><th>Alumno</th><th>Presente</th><th>Acciones</th></tr>
+      </thead>
       <tbody id="tablaReservasClase"></tbody>
     </table>
     <br>
     <button onclick="cerrarModalReservas()">Cerrar</button>
   </div>
 
-  <div id="modalAlumno" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
-  <h3>Editar Alumno</h3>
-  <input type="text" id="editNombre" placeholder="Nombre" />
-  <input type="text" id="editApellido" placeholder="Apellido" />
-  <input type="text" id="editDni" placeholder="DNI" />
-  <input type="text" id="editTel" placeholder="Teléfono" />
-  <input type="email" id="editEmail" placeholder="Email" />
-  <br><br>
-  <button onclick="guardarEdicionAlumno()">Guardar</button>
-  <button onclick="cerrarModalAlumno()">Cancelar</button>
-</div>
-
   <script src="script.js"></script>
+
 </body>
 </html>
