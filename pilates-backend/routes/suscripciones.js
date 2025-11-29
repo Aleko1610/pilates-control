@@ -2,19 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-router.post('/', (req, res) => {
-  const { alumno_id, plan_id, fecha_inicio, fecha_fin, creditos_actuales } = req.body;
-
-  const sql = `
-    INSERT INTO suscripciones (alumno_id, plan_id, fecha_inicio, fecha_fin, creditos_actuales)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-  db.run(sql, [alumno_id, plan_id, fecha_inicio, fecha_fin, creditos_actuales], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ id: this.lastID });
-  });
-});
-
 router.get('/activo/:alumno_id', (req, res) => {
   const { alumno_id } = req.params;
 
@@ -27,10 +14,22 @@ router.get('/activo/:alumno_id', (req, res) => {
   `;
 
   db.get(sql, [alumno_id], (err, row) => {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) return res.json(null);
     res.json(row || null);
   });
 });
 
+router.post('/', (req, res) => {
+  const { alumno_id, plan_id, fecha_inicio, fecha_fin, creditos_actuales } = req.body;
+
+  const sql = `
+    INSERT INTO suscripciones (alumno_id, plan_id, fecha_inicio, fecha_fin, creditos_actuales)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  db.run(sql, [alumno_id, plan_id, fecha_inicio, fecha_fin, creditos_actuales], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ id: this.lastID });
+  });
+});
 
 module.exports = router;

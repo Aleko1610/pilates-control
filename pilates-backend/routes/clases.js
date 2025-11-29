@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Crear clase
 router.post('/', (req, res) => {
   const { dia, hora, cupo_maximo, profesor, tipo_clase } = req.body;
 
@@ -16,7 +15,6 @@ router.post('/', (req, res) => {
   });
 });
 
-// Listar clases
 router.get('/', (req, res) => {
   db.all(`SELECT * FROM clases ORDER BY dia, hora`, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });

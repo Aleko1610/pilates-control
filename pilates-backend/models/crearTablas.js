@@ -18,17 +18,17 @@ function crearTablas() {
       );
     `);
 
-    db.run(`
-      CREATE TABLE IF NOT EXISTS planes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        tipo_plan TEXT CHECK(tipo_plan IN ('tiempo','creditos','mixto')) NOT NULL,
-        precio REAL NOT NULL,
-        creditos_totales INTEGER,
-        duracion_dias INTEGER,
-        activo INTEGER DEFAULT 1
-      );
-    `);
+db.run(`
+  CREATE TABLE IF NOT EXISTS planes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    tipo_plan TEXT CHECK(tipo_plan IN ('tiempo','creditos','mixto')) NOT NULL,
+    precio REAL NOT NULL,
+    creditos_totales INTEGER,
+    duracion_dias INTEGER,
+    activo INTEGER DEFAULT 1
+  );
+`);
 
     db.run(`
       CREATE TABLE IF NOT EXISTS suscripciones (
@@ -45,27 +45,26 @@ function crearTablas() {
     `);
 
     db.run(`
-  CREATE TABLE IF NOT EXISTS clases (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    dia TEXT NOT NULL,
-    hora TEXT NOT NULL,
-    cupo_maximo INTEGER NOT NULL,
-    profesor TEXT,
-    tipo_clase TEXT DEFAULT 'Pilates'
-  );
-`);
+      CREATE TABLE IF NOT EXISTS clases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        dia TEXT NOT NULL,
+        hora TEXT NOT NULL,
+        cupo_maximo INTEGER NOT NULL,
+        profesor TEXT,
+        tipo_clase TEXT DEFAULT 'Pilates'
+      );
+    `);
 
-db.run(`
-  CREATE TABLE IF NOT EXISTS reservas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    clase_id INTEGER NOT NULL,
-    alumno_id INTEGER NOT NULL,
-    presente INTEGER DEFAULT 0,
-    FOREIGN KEY (clase_id) REFERENCES clases(id),
-    FOREIGN KEY (alumno_id) REFERENCES alumnos(id)
-  );
-`);
-
+    db.run(`
+      CREATE TABLE IF NOT EXISTS reservas (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        clase_id INTEGER NOT NULL,
+        alumno_id INTEGER NOT NULL,
+        presente INTEGER DEFAULT 0,
+        FOREIGN KEY (clase_id) REFERENCES clases(id),
+        FOREIGN KEY (alumno_id) REFERENCES alumnos(id)
+      );
+    `);
   });
 }
 

@@ -12,16 +12,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Crear tablas si no existen
 crearTablas();
 
-// Rutas API
 app.use('/alumnos', alumnosRoutes);
 app.use('/planes', planesRoutes);
 app.use('/suscripciones', suscripcionesRoutes);
 app.use('/clases', clasesRoutes);
 app.use('/reservas', reservasRoutes);
 
-// Puerto
 const PORT = 3001;
 app.listen(PORT, () => console.log(`Servidor funcionando en puerto ${PORT}`));

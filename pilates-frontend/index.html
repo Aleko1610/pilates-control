@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pilates Control</title>
+  <title>Pilates Control MVP</title>
 </head>
 <body>
-  <h1>Pilates Control - Alumnos</h1>
+  <h1>Pilates Control</h1>
 
+  <!-- Alumnos -->
+  <h2>Alumnos</h2>
   <form id="formAlumno">
     <input type="text" id="nombre" placeholder="Nombre" required />
     <input type="text" id="apellido" placeholder="Apellido" required />
@@ -17,64 +19,92 @@
     <button type="submit">Agregar Alumno</button>
   </form>
 
-  <h2>Listado de Alumnos</h2>
   <table border="1">
     <thead>
       <tr>
-        <th>Nombre</th>
-        <th>Apellido</th>
-        <th>DNI</th>
-        <th>Teléfono</th>
-        <th>Email</th>
+        <th>Nombre</th><th>Apellido</th><th>DNI</th><th>Teléfono</th><th>Email</th><th>Plan</th><th>Acción</th>
       </tr>
     </thead>
-    <tbody id="tablaAlumnos">
-    </tbody>
+    <tbody id="tablaAlumnos"></tbody>
   </table>
 
   <hr />
-<h2>Planes</h2>
 
-<form id="formPlan">
-  <input type="text" id="planNombre" placeholder="Nombre del plan" required />
-  
-  <select id="planTipo" required>
-    <option value="">Tipo de plan</option>
-    <option value="tiempo">Tiempo (mensual)</option>
-    <option value="creditos">Créditos</option>
-    <option value="mixto">Mixto</option>
-  </select>
+  <!-- Planes -->
+  <h2>Planes</h2>
+  <form id="formPlan">
+    <input type="text" id="planNombre" placeholder="Nombre" required />
+    <select id="planTipo" required>
+      <option value="">Tipo de plan</option>
+      <option value="tiempo">Tiempo</option>
+      <option value="creditos">Créditos</option>
+      <option value="mixto">Mixto</option>
+    </select>
+    <input type="number" id="planPrecio" placeholder="Precio" required />
+    <input type="number" id="planCreditos" placeholder="Créditos totales" />
+    <input type="number" id="planDuracion" placeholder="Duración en días" />
+    <button type="submit">Agregar Plan</button>
+  </form>
 
-  <input type="number" id="planPrecio" placeholder="Precio" required />
-  
-  <input type="number" id="planCreditos" placeholder="Créditos Totales (si aplica)" />
-  
-  <input type="number" id="planDuracion" placeholder="Duración en días (si aplica)" />
+  <table border="1">
+    <thead>
+      <tr><th>Nombre</th><th>Tipo</th><th>Precio</th><th>Créditos</th><th>Días</th></tr>
+    </thead>
+    <tbody id="tablaPlanes"></tbody>
+  </table>
 
-  <button type="submit">Agregar Plan</button>
-</form>
+  <!-- ModalAsignarPlan -->
+  <div id="modalPlan" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
+    <h3>Asignar Plan</h3>
+    <select id="selectPlan"></select>
+    <br><br>
+    <button onclick="confirmarAsignacion()">Confirmar</button>
+    <button onclick="cerrarModal()">Cancelar</button>
+  </div>
 
-<table border="1">
-  <thead>
-    <tr>
-      <th>Nombre</th>
-      <th>Tipo</th>
-      <th>Precio</th>
-      <th>Créditos</th>
-      <th>Días</th>
-    </tr>
-  </thead>
-  <tbody id="tablaPlanes">
-  </tbody>
-</table>
+  <hr />
 
-<!-- Modal para asignar plan -->
-<div id="modalPlan" style="display:none; position:fixed; top:20%; left:30%; background:#fff; padding:20px; border:1px solid #000;">
-  <h3>Asignar Plan</h3>
-  <select id="selectPlan"></select>
+  <!-- Clases -->
+  <h2>Clases</h2>
+  <form id="formClase">
+    <input type="date" id="claseDia" required />
+    <input type="time" id="claseHora" required />
+    <input type="number" id="claseCupo" placeholder="Cupo" required />
+    <input type="text" id="claseProfesor" placeholder="Profesor" />
+    <input type="text" id="claseTipo" placeholder="Tipo de Clase" value="Pilates" />
+    <button type="submit">Crear Clase</button>
+  </form>
+
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Día</th><th>Hora</th><th>Profesor</th><th>Cupo</th><th>Reservados</th><th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tablaClases"></tbody>
+  </table>
+
+  <!-- ModalReservas -->
+  <div id="modalReservas" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
+    <h3>Reservas de Clase</h3>
+    <table border="1">
+      <thead><tr><th>Alumno</th><th>Presente</th></tr></thead>
+      <tbody id="tablaReservasClase"></tbody>
+    </table>
+    <br>
+    <button onclick="cerrarModalReservas()">Cerrar</button>
+  </div>
+
+  <div id="modalAlumno" style="display:none; position:fixed; top:20%; left:20%; background:#fff; padding:20px; border:1px solid #000;">
+  <h3>Editar Alumno</h3>
+  <input type="text" id="editNombre" placeholder="Nombre" />
+  <input type="text" id="editApellido" placeholder="Apellido" />
+  <input type="text" id="editDni" placeholder="DNI" />
+  <input type="text" id="editTel" placeholder="Teléfono" />
+  <input type="email" id="editEmail" placeholder="Email" />
   <br><br>
-  <button onclick="confirmarAsignacion()">Confirmar</button>
-  <button onclick="cerrarModal()">Cancelar</button>
+  <button onclick="guardarEdicionAlumno()">Guardar</button>
+  <button onclick="cerrarModalAlumno()">Cancelar</button>
 </div>
 
   <script src="script.js"></script>
