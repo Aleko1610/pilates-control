@@ -32,4 +32,55 @@ router.post('/', (req, res) => {
   });
 });
 
+// Obtener todas las suscripciones activas
+router.get('/activas', (req, res) => {
+  const sql = `
+    SELECT s.*, 
+           a.nombre AS alumno_nombre,
+           a.apellido AS alumno_apellido,
+           p.nombre AS plan_nombre
+    FROM suscripciones s
+    JOIN alumnos a ON s.alumno_id = a.id
+    JOIN planes p ON s.plan_id = p.id
+    WHERE s.estado = 'activa'
+  `;
+
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error obteniendo suscripciones activas" });
+    }
+    res.json(rows);
+  });
+});
+
+// Suscripciones con vencimiento cercano
+router.get('/vencimientos', (req, res) => {
+  const sql = `
+    SELECT 
+      s.*, 
+      a.nombre AS alumno_nombre,
+      a.apellido AS alumno_apellido,
+      p.nombre AS plan_nombre,
+      date('now') AS hoy,
+      julianday(s.fecha_fin) - julianday(date('now')) AS dias_restantes
+    FROM suscripciones s
+    JOIN alumnos a ON s.alumno_id = a.id
+    JOIN planes p ON s.plan_id = p.id
+    WHERE s.estado = 'activa'
+      AND s.fecha_fin IS NOT NULL
+      AND s.fecha_fin <= date('now', '+7 days')
+    ORDER BY s.fecha_fin ASC
+  `;
+  
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error obteniendo vencimientos" });
+    }
+    res.json(rows);
+  });
+});
+
+
 module.exports = router;

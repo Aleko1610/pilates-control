@@ -6,7 +6,7 @@ let claseEditando = null;
 let planEditando = null;
 let alumnoEditando = null;
 
-// === REFERENCIAS DOM ===
+// =================== DOM ELEMENTS ===================
 const formAlumno = document.getElementById("formAlumno");
 const tablaAlumnos = document.getElementById("tablaAlumnos");
 
@@ -44,7 +44,6 @@ const modalReservas = document.getElementById("modalReservas");
 const tablaReservasClase = document.getElementById("tablaReservasClase");
 
 // =================== ALUMNOS ===================
-
 formAlumno.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -58,8 +57,8 @@ formAlumno.addEventListener("submit", async (e) => {
 
   await fetch(`${API_URL}/alumnos`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(nuevoAlumno)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(nuevoAlumno),
   });
 
   e.target.reset();
@@ -95,7 +94,7 @@ async function cargarAlumnos() {
 
 function seleccionarAlumno(id) {
   alumnoSeleccionado = id;
-  alert("Alumno seleccionado correctamente");
+  alert("Alumno seleccionado!");
 }
 
 function abrirEdicionAlumno(id, nombre, apellido, dni, tel, email) {
@@ -119,34 +118,27 @@ async function guardarEdicionAlumno() {
     apellido: editApellidoInput.value,
     dni: editDniInput.value,
     telefono: editTelInput.value,
-    email: editEmailInput.value
+    email: editEmailInput.value,
   };
 
-  const res = await fetch(`${API_URL}/alumnos/${alumnoEditando}`, {
+  await fetch(`${API_URL}/alumnos/${alumnoEditando}`, {
     method: "PUT",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(updated)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updated),
   });
-
-  const data = await res.json();
-  if (data.error) alert(data.error);
 
   cerrarModalAlumno();
   cargarAlumnos();
 }
 
 async function eliminarAlumno(id) {
-  if (!confirm("¿Seguro que querés eliminar este alumno?")) return;
+  if (!confirm("¿Seguro?")) return;
 
-  const res = await fetch(`${API_URL}/alumnos/${id}`, { method: "DELETE" });
-  const data = await res.json();
-  if (data.error) alert(data.error);
-
+  await fetch(`${API_URL}/alumnos/${id}`, { method: "DELETE" });
   cargarAlumnos();
 }
 
 // =================== PLANES ===================
-
 formPlan.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -155,13 +147,13 @@ formPlan.addEventListener("submit", async (e) => {
     tipo_plan: document.getElementById("planTipo").value,
     precio: parseFloat(document.getElementById("planPrecio").value),
     creditos_totales: document.getElementById("planCreditos").value || null,
-    duracion_dias: document.getElementById("planDuracion").value || null
+    duracion_dias: document.getElementById("planDuracion").value || null,
   };
 
   await fetch(`${API_URL}/planes`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(newPlan)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newPlan),
   });
 
   e.target.reset();
@@ -191,8 +183,8 @@ async function cargarPlanes() {
   });
 }
 
-function abrirAsignacion(alumno_id) {
-  alumnoSeleccionado = alumno_id;
+function abrirAsignacion(id) {
+  alumnoSeleccionado = id;
   selectPlan.innerHTML = "";
 
   planesGlobales.forEach(p => {
@@ -215,11 +207,8 @@ async function confirmarAsignacion() {
 
   if ((plan.tipo_plan === "tiempo" || plan.tipo_plan === "mixto") && plan.duracion_dias) {
     const hoy = new Date();
-    const dias = parseInt(plan.duracion_dias);
-    if (!isNaN(dias)) {
-      hoy.setDate(hoy.getDate() + dias);
-      fecha_fin = hoy.toISOString().split("T")[0];
-    }
+    hoy.setDate(hoy.getDate() + parseInt(plan.duracion_dias));
+    fecha_fin = hoy.toISOString().split("T")[0];
   }
 
   if ((plan.tipo_plan === "creditos" || plan.tipo_plan === "mixto") && plan.creditos_totales) {
@@ -228,14 +217,14 @@ async function confirmarAsignacion() {
 
   await fetch(`${API_URL}/suscripciones`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       alumno_id: alumnoSeleccionado,
       plan_id,
       fecha_inicio: new Date().toISOString().split("T")[0],
       fecha_fin,
-      creditos_actuales
-    })
+      creditos_actuales,
+    }),
   });
 
   cerrarModal();
@@ -245,7 +234,6 @@ async function confirmarAsignacion() {
 async function cargarPlanActivo(alumno_id) {
   const res = await fetch(`${API_URL}/suscripciones/activo/${alumno_id}`);
   if (!res.ok) return;
-
   const data = await res.json();
   const celda = document.getElementById(`plan-${alumno_id}`);
   if (celda) celda.textContent = data ? data.plan_nombre : "Sin plan";
@@ -272,34 +260,26 @@ async function guardarEdicionPlan() {
     tipo_plan: editPlanTipoSelect.value,
     precio: parseFloat(editPlanPrecioInput.value),
     creditos_totales: editPlanCreditosInput.value || null,
-    duracion_dias: editPlanDuracionInput.value || null
+    duracion_dias: editPlanDuracionInput.value || null,
   };
 
-  const res = await fetch(`${API_URL}/planes/${planEditando}`, {
+  await fetch(`${API_URL}/planes/${planEditando}`, {
     method: "PUT",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(updated)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updated),
   });
-
-  const data = await res.json();
-  if (data.error) alert(data.error);
 
   cerrarModalPlanEditar();
   cargarPlanes();
 }
 
 async function eliminarPlan(id) {
-  if (!confirm("¿Seguro que querés eliminar este plan?")) return;
-
-  const res = await fetch(`${API_URL}/planes/${id}`, { method: "DELETE" });
-  const data = await res.json();
-  if (data.error) alert(data.error);
-
+  if (!confirm("¿Seguro?")) return;
+  await fetch(`${API_URL}/planes/${id}`, { method: "DELETE" });
   cargarPlanes();
 }
 
 // =================== CLASES ===================
-
 formClase.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -308,13 +288,13 @@ formClase.addEventListener("submit", async (e) => {
     hora: document.getElementById("claseHora").value,
     cupo_maximo: parseInt(document.getElementById("claseCupo").value),
     profesor: document.getElementById("claseProfesor").value,
-    tipo_clase: document.getElementById("claseTipo").value
+    tipo_clase: document.getElementById("claseTipo").value,
   };
 
   await fetch(`${API_URL}/clases`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(nuevaClase)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(nuevaClase),
   });
 
   e.target.reset();
@@ -329,8 +309,7 @@ async function cargarClases() {
 
   for (const c of clases) {
     const r = await fetch(`${API_URL}/reservas/clase/${c.id}`);
-    let reservas = [];
-    if (r.ok) reservas = await r.json();
+    const reservas = r.ok ? await r.json() : [];
 
     tablaClases.innerHTML += `
       <tr>
@@ -352,17 +331,17 @@ async function cargarClases() {
 
 async function reservarClase(id) {
   if (!alumnoSeleccionado) {
-    alert("Primero seleccioná un alumno");
+    alert("Primero seleccioná un alumno!");
     return;
   }
 
   const res = await fetch(`${API_URL}/reservas`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       clase_id: id,
-      alumno_id: alumnoSeleccionado
-    })
+      alumno_id: alumnoSeleccionado,
+    }),
   });
 
   const data = await res.json();
@@ -376,8 +355,8 @@ function abrirEdicionClase(id, dia, hora, cupo, profesor, tipo) {
   editClaseDiaInput.value = dia;
   editClaseHoraInput.value = hora;
   editClaseCupoInput.value = cupo;
-  editClaseProfesorInput.value = profesor || "";
-  editClaseTipoInput.value = tipo || "Pilates";
+  editClaseProfesorInput.value = profesor;
+  editClaseTipoInput.value = tipo;
   modalClaseEditar.style.display = "block";
 }
 
@@ -392,38 +371,29 @@ async function guardarEdicionClase() {
     hora: editClaseHoraInput.value,
     cupo_maximo: parseInt(editClaseCupoInput.value),
     profesor: editClaseProfesorInput.value,
-    tipo_clase: editClaseTipoInput.value
+    tipo_clase: editClaseTipoInput.value,
   };
 
-  const res = await fetch(`${API_URL}/clases/${claseEditando}`, {
+  await fetch(`${API_URL}/clases/${claseEditando}`, {
     method: "PUT",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(updated)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updated),
   });
-
-  const data = await res.json();
-  if (data.error) alert(data.error);
 
   cerrarModalClaseEditar();
   cargarClases();
 }
 
 async function eliminarClase(id) {
-  if (!confirm("¿Seguro que querés eliminar esta clase?")) return;
-
-  const res = await fetch(`${API_URL}/clases/${id}`, { method: "DELETE" });
-  const data = await res.json();
-  if (data.error) alert(data.error);
-
+  if (!confirm("¿Eliminar clase?")) return;
+  await fetch(`${API_URL}/clases/${id}`, { method: "DELETE" });
   cargarClases();
 }
 
 // =================== RESERVAS / ASISTENCIA ===================
-
 async function mostrarReservas(clase_id) {
   const res = await fetch(`${API_URL}/reservas/clase/${clase_id}`);
-  let reservas = [];
-  if (res.ok) reservas = await res.json();
+  const reservas = res.ok ? await res.json() : [];
 
   tablaReservasClase.innerHTML = "";
 
@@ -437,9 +407,7 @@ async function mostrarReservas(clase_id) {
             ${r.presente ? "checked" : ""}
           >
         </td>
-        <td>
-          <button onclick="cancelarReserva(${r.id})">Cancelar</button>
-        </td>
+        <td><button onclick="cancelarReserva(${r.id})">Cancelar</button></td>
       </tr>
     `;
   });
@@ -454,24 +422,84 @@ function cerrarModalReservas() {
 async function marcarAsistencia(id, checked) {
   await fetch(`${API_URL}/reservas/${id}/presente`, {
     method: "PATCH",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ presente: checked ? 1 : 0 })
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ presente: checked ? 1 : 0 }),
   });
 }
 
 async function cancelarReserva(id) {
-  if (!confirm("¿Cancelar esta reserva?")) return;
-
-  const res = await fetch(`${API_URL}/reservas/${id}`, { method: "DELETE" });
-  const data = await res.json();
-  if (data.error) alert(data.error);
-
+  if (!confirm("¿Cancelar reserva?")) return;
+  await fetch(`${API_URL}/reservas/${id}`, { method: "DELETE" });
   modalReservas.style.display = "none";
   cargarClases();
 }
 
-// =================== INICIO ===================
+// =================== DASHBOARD ===================
+async function cargarDashboard() {
 
+  // Total alumnos activos
+  const resSub = await fetch(`${API_URL}/suscripciones/activas`);
+  const subsActivas = await resSub.json();
+  document.getElementById("dashTotalAlumnos").textContent = subsActivas.length;
+
+  // Clases hoy
+  const hoy = new Date().toISOString().split("T")[0];
+  const resClases = await fetch(`${API_URL}/clases`);
+  const clases = await resClases.json();
+  const clasesHoy = clases.filter(c => c.dia === hoy);
+  document.getElementById("dashClasesHoy").textContent = clasesHoy.length;
+
+  // Ocupación promedio del día
+  let totalLugares = 0;
+  let totalOcupados = 0;
+
+  for (const c of clasesHoy) {
+    totalLugares += c.cupo_maximo;
+    const r = await fetch(`${API_URL}/reservas/clase/${c.id}`);
+    const reservas = await r.json();
+    totalOcupados += reservas.length;
+  }
+
+  const porcentaje = totalLugares > 0
+    ? Math.round((totalOcupados / totalLugares) * 100)
+    : 0;
+
+  document.getElementById("dashOcupacion").textContent = porcentaje + "%";
+
+  // Vencimientos próximos
+  const resVenc = await fetch(`${API_URL}/suscripciones/vencimientos`);
+  const vencimientos = await resVenc.json();
+  const vencimientosList = document.getElementById("dashVencimientos");
+  vencimientosList.innerHTML = "";
+
+  if (vencimientos.length === 0) {
+    vencimientosList.innerHTML = "<li>Sin vencimientos</li>";
+  } else {
+    vencimientos.forEach(v => {
+      const dias = Math.floor(v.dias_restantes);
+      let label = "";
+
+      if (dias < 0) label = `Vencido hace ${Math.abs(dias)} días`;
+      else if (dias === 0) label = "Vence HOY 🚨";
+      else label = `Vence en ${dias} días`;
+
+      vencimientosList.innerHTML += `
+        <li>${v.alumno_nombre} ${v.alumno_apellido} — ${v.plan_nombre} — ${label}</li>
+      `;
+    });
+  }
+}
+
+// =================== VISTAS ===================
+function mostrarSeccion(id) {
+  document.querySelectorAll("section").forEach(s => s.style.display = "none");
+  document.getElementById(id).style.display = "block";
+
+  if (id === "dashboard") cargarDashboard();
+}
+
+// =================== INIT ===================
 cargarAlumnos();
 cargarPlanes();
 cargarClases();
+mostrarSeccion("dashboard");
