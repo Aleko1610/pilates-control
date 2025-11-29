@@ -61,5 +61,20 @@ router.delete('/:id', (req, res) => {
   });
 });
 
+router.patch("/clases/:id/mover", (req, res) => {
+  const { start } = req.body;
+  const [dia, hora] = start.split("T");
+
+  const sql = `
+    UPDATE clases
+    SET dia = ?, hora = ?
+    WHERE id = ?
+  `;
+
+  db.run(sql, [dia, hora, req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: "Error al mover clase" });
+    res.json({ message: "Clase actualizada" });
+  });
+});
 
 module.exports = router;

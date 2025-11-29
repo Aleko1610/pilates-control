@@ -23,8 +23,8 @@
       <h2 class="logo">PilatesControl</h2>
 
       <ul class="menu">
-        <li onclick="mostrarSeccion('calendarView')">📅 Calendario</li>
         <li onclick="mostrarSeccion('dashboard')">📊 Dashboard</li>
+        <li onclick="mostrarSeccion('calendarView')">📅 Calendario</li>
         <li onclick="mostrarSeccion('alumnos')">👤 Alumnos</li>
         <li onclick="mostrarSeccion('planes')">💳 Planes</li>
         <li onclick="mostrarSeccion('clases')">📅 Clases</li>
@@ -33,14 +33,8 @@
 
     <main class="main-content">
 
-      <!-- ========== CALENDARIO ========== -->
-      <section id="calendarView" style="display:block;">
-        <h2>Calendario de Clases</h2>
-        <div id="calendar"></div>
-      </section>
-
       <!-- ========== DASHBOARD ========== -->
-      <section id="dashboard" style="display:none;">
+      <section id="dashboard" style="display:block;">
         <h2>Dashboard</h2>
 
         <div class="kpi-container">
@@ -85,22 +79,75 @@
         </div>
       </section>
 
+      <!-- ========== CALENDARIO ========== -->
+      <section id="calendarView" style="display:none;">
+        <h2>Calendario de Clases</h2>
+        <div id="calendar"></div>
+      </section>
+
       <!-- ========== ALUMNOS ========== -->
       <section id="alumnos" style="display:none;">
         <h2>Alumnos</h2>
 
         <form id="formAlumno">
-          <input type="text" id="nombre" placeholder="Nombre" required />
-          <input type="text" id="apellido" placeholder="Apellido" required />
-          <input type="text" id="dni" placeholder="DNI" required />
-          <input type="text" id="telefono" placeholder="Teléfono" />
-          <input type="email" id="email" placeholder="Email" />
+          <input
+            id="nombre"
+            placeholder="Nombre"
+            required
+            maxlength="15"
+            pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\\s]+"
+            title="Solo letras (máx. 15)"
+          >
+
+          <input
+            id="apellido"
+            placeholder="Apellido"
+            required
+            maxlength="15"
+            pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\\s]+"
+            title="Solo letras (máx. 15)"
+          >
+
+          <input
+            id="dni"
+            placeholder="DNI"
+            required
+            maxlength="8"
+            pattern="[0-9]+"
+            title="Solo números, máximo 8"
+          >
+
+          <input
+            id="telefono"
+            placeholder="Teléfono"
+            required
+            maxlength="15"
+            pattern="[0-9+]+"
+            title="Solo números y +, máximo 15"
+          >
+
+          <input
+            id="email"
+            placeholder="Email"
+            required
+            type="email"
+          >
+
           <button type="submit">Agregar Alumno</button>
         </form>
 
         <table>
           <thead>
-            <tr><th>Nombre</th><th>Apellido</th><th>DNI</th><th>Teléfono</th><th>Email</th><th>Plan</th><th>Acciones</th></tr>
+            <tr>
+              <th>Sel.</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>DNI</th>
+              <th>Teléfono</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Acciones</th>
+            </tr>
           </thead>
           <tbody id="tablaAlumnos"></tbody>
         </table>
@@ -200,14 +247,24 @@
       </div>
 
       <div id="modalReservas" class="modal">
-        <h3>Reservas de Clase</h3>
-        <table>
-          <thead><tr><th>Alumno</th><th>Presente</th><th>Acciones</th></tr></thead>
-          <tbody id="tablaReservasClase"></tbody>
-        </table>
-        <br>
-        <button onclick="cerrarModalReservas()">Cerrar</button>
-      </div>
+  <h3>Reservas de Clase</h3>
+
+  <label>Agregar alumno:</label>
+  <select id="selectAlumnoReserva"></select>
+  <button onclick="agregarReservaDesdeModal()">Agregar</button>
+
+  <br><br>
+
+  <table>
+    <thead>
+      <tr><th>Alumno</th><th>Presente</th><th>Acciones</th></tr>
+    </thead>
+    <tbody id="tablaReservasClase"></tbody>
+  </table>
+
+  <br>
+  <button onclick="cerrarModalReservas()">Cerrar</button>
+</div>
 
     </main>
   </div>

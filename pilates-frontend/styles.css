@@ -108,6 +108,11 @@ tr:last-child td {
   border-bottom: none;
 }
 
+/* FILA SELECCIONADA */
+.selected-row {
+  background: #d9fff0 !important;
+}
+
 /* BOTONES */
 button {
   padding: 6px 10px;

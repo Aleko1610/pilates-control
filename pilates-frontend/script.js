@@ -56,12 +56,45 @@ const tablaReservasClase = document.getElementById("tablaReservasClase");
 formAlumno.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  // Validación extra JS por si el usuario se pelea con los patterns
+  const nombre = document.getElementById("nombre").value.trim();
+  const apellido = document.getElementById("apellido").value.trim();
+  const dni = document.getElementById("dni").value.trim();
+  const telefono = document.getElementById("telefono").value.trim();
+  const email = document.getElementById("email").value.trim();
+
+  const regexNombre = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,15}$/;
+  const regexDni = /^[0-9]{1,8}$/;
+  const regexTel = /^[0-9+]{1,15}$/;
+  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!regexNombre.test(nombre)) {
+    alert("Nombre inválido");
+    return;
+  }
+  if (!regexNombre.test(apellido)) {
+    alert("Apellido inválido");
+    return;
+  }
+  if (!regexDni.test(dni)) {
+    alert("DNI inválido");
+    return;
+  }
+  if (!regexTel.test(telefono)) {
+    alert("Teléfono inválido");
+    return;
+  }
+  if (!regexEmail.test(email)) {
+    alert("Email inválido");
+    return;
+  }
+
   const nuevoAlumno = {
-    nombre: document.getElementById("nombre").value,
-    apellido: document.getElementById("apellido").value,
-    dni: document.getElementById("dni").value,
-    telefono: document.getElementById("telefono").value,
-    email: document.getElementById("email").value,
+    nombre,
+    apellido,
+    dni,
+    telefono,
+    email,
   };
 
   await fetch(`${API_URL}/alumnos`, {
@@ -83,6 +116,14 @@ async function cargarAlumnos() {
   alumnos.forEach(a => {
     tablaAlumnos.innerHTML += `
       <tr>
+        <td>
+          <input
+            type="radio"
+            name="alumnoSelect"
+            value="${a.id}"
+            onclick="seleccionarAlumno(${a.id})"
+          >
+        </td>
         <td>${a.nombre}</td>
         <td>${a.apellido}</td>
         <td>${a.dni}</td>
@@ -90,7 +131,6 @@ async function cargarAlumnos() {
         <td>${a.email || "-"}</td>
         <td id="plan-${a.id}">-</td>
         <td>
-          <button onclick="seleccionarAlumno(${a.id})">Seleccionar</button>
           <button onclick="abrirEdicionAlumno(${a.id}, '${a.nombre}', '${a.apellido}', '${a.dni}', '${a.telefono || ""}', '${a.email || ""}')">Editar</button>
           <button onclick="eliminarAlumno(${a.id})">Eliminar</button>
           <button onclick="abrirAsignacion(${a.id})">Asignar Plan</button>
@@ -103,7 +143,15 @@ async function cargarAlumnos() {
 
 function seleccionarAlumno(id) {
   alumnoSeleccionado = id;
-  alert("Alumno seleccionado");
+
+  document.querySelectorAll("#tablaAlumnos tr")
+    .forEach(r => r.classList.remove("selected-row"));
+
+  const radio = document.querySelector(`#tablaAlumnos input[type="radio"][value="${id}"]`);
+  if (radio) {
+    const fila = radio.closest("tr");
+    if (fila) fila.classList.add("selected-row");
+  }
 }
 
 function abrirEdicionAlumno(id, nombre, apellido, dni, tel, email) {
@@ -123,11 +171,11 @@ function cerrarModalAlumno() {
 
 async function guardarEdicionAlumno() {
   const updated = {
-    nombre: editNombreInput.value,
-    apellido: editApellidoInput.value,
-    dni: editDniInput.value,
-    telefono: editTelInput.value,
-    email: editEmailInput.value,
+    nombre: editNombreInput.value.trim(),
+    apellido: editApellidoInput.value.trim(),
+    dni: editDniInput.value.trim(),
+    telefono: editTelInput.value.trim(),
+    email: editEmailInput.value.trim(),
   };
 
   await fetch(`${API_URL}/alumnos/${alumnoEditando}`, {
@@ -414,8 +462,23 @@ async function eliminarClase(id) {
 // ========== RESERVAS / ASISTENCIA ==========
 
 async function mostrarReservas(clase_id) {
+  modalReservas.dataset.claseId = clase_id;
+
+  // cargar reservas
   const res = await fetch(`${API_URL}/reservas/clase/${clase_id}`);
   const reservas = res.ok ? await res.json() : [];
+
+  // cargar alumnos
+  const resAlumnos = await fetch(`${API_URL}/alumnos`);
+  const alumnos = await resAlumnos.json();
+
+  const selectAlumno = document.getElementById("selectAlumnoReserva");
+  selectAlumno.innerHTML = '<option value="">Elegir alumno</option>';
+
+  alumnos.forEach(a => {
+    selectAlumno.innerHTML += `
+      <option value="${a.id}">${a.nombre} ${a.apellido}</option>`;
+  });
 
   tablaReservasClase.innerHTML = "";
 
@@ -429,9 +492,8 @@ async function mostrarReservas(clase_id) {
             ${r.presente ? "checked" : ""}
           >
         </td>
-        <td><button onclick="cancelarReserva(${r.id})">Cancelar</button></td>
-      </tr>
-    `;
+        <td><button onclick="cancelarReserva(${r.id})">❌</button></td>
+      </tr>`;
   });
 
   modalReservas.style.display = "block";
@@ -455,6 +517,29 @@ async function cancelarReserva(id) {
   modalReservas.style.display = "none";
   cargarClases();
   if (calendar) cargarEventosCalendar(calendar);
+}
+
+async function agregarReservaDesdeModal() {
+  const alumno_id = document.getElementById("selectAlumnoReserva").value;
+  if (!alumno_id) return alert("Elegí un alumno");
+
+  const clase_id = modalReservas.dataset.claseId;
+
+  const res = await fetch(`${API_URL}/reservas`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ clase_id, alumno_id })
+  });
+
+  const data = await res.json();
+  if (data.error) {
+    alert(data.error);
+    return;
+  }
+
+  cargarClases();
+  cargarEventosCalendar(calendar);
+  mostrarReservas(clase_id);
 }
 
 // ========== DASHBOARD (KPIs + CHARTS) ==========
@@ -510,7 +595,6 @@ async function actualizarKPIs() {
 }
 
 async function renderCharts() {
-  // destruir si ya existen
   if (chartOcupacion) chartOcupacion.destroy();
   if (chartAsistencia) chartAsistencia.destroy();
   if (chartVencimientos) chartVencimientos.destroy();
@@ -571,9 +655,12 @@ function initCalendar() {
   if (!calendarEl) return;
 
   calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'timeGridWeek',
+    initialView: 'dayGridMonth',
+    initialDate: new Date().toISOString().split("T")[0],
     locale: 'es',
     selectable: true,
+    editable: true,
+    eventResizableFromStart: true,
     expandRows: true,
     slotDuration: '00:30:00',
     headerToolbar: {
@@ -587,6 +674,23 @@ function initCalendar() {
     eventClick: function(info) {
       const claseId = info.event.id;
       mostrarReservas(claseId);
+    },
+    eventDrop: async function(info) {
+      await moverClase(info);
+    },
+    eventResize: async function(info) {
+      await moverClase(info);
+    },
+    eventDidMount: async function(info) {
+      const claseId = info.event.id;
+      const r = await fetch(`${API_URL}/reservas/clase/${claseId}`);
+      const reservas = await r.json();
+
+      const ocupados = reservas.length;
+      const cupo = info.event.extendedProps.cupo;
+
+      info.el.title = `${info.event.title}
+Ocupación: ${ocupados}/${cupo}`;
     }
   });
 
@@ -598,21 +702,49 @@ async function cargarEventosCalendar(calendarInstance) {
   const res = await fetch(`${API_URL}/clases`);
   const clases = await res.json();
 
-  const eventos = clases.map(c => ({
-    id: c.id,
-    title: `${c.tipo_clase || "Clase"} (${c.cupo_maximo})`,
-    start: `${c.dia}T${c.hora}`,
-    backgroundColor: "#00C896",
-    borderColor: "#007b6e"
-  }));
+  const eventos = [];
+
+  for (const c of clases) {
+    const r = await fetch(`${API_URL}/reservas/clase/${c.id}`);
+    const reservas = await r.json();
+    const ocupados = reservas.length;
+    const porcentaje = (ocupados / c.cupo_maximo) * 100;
+
+    let color = "#00C896";
+    if (porcentaje >= 80) color = "#ff4d4d";
+    else if (porcentaje >= 50) color = "#f0b400";
+
+    eventos.push({
+      id: c.id,
+      title: `${c.tipo_clase || "Clase"} (${ocupados}/${c.cupo_maximo})`,
+      start: `${c.dia}T${c.hora}`,
+      backgroundColor: color,
+      borderColor: "#000",
+      extendedProps: { cupo: c.cupo_maximo }
+    });
+  }
 
   calendarInstance.removeAllEvents();
   calendarInstance.addEventSource(eventos);
 }
 
+async function moverClase(info) {
+  const start = info.event.start.toISOString();
+
+  await fetch(`${API_URL}/clases/${info.event.id}/mover`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ start })
+  });
+
+  cargarClases();
+  cargarEventosCalendar(calendar);
+}
+
 function abrirFormClaseParaFecha(fechaStr) {
   mostrarSeccion('clases');
   document.getElementById("claseDia").value = fechaStr;
+  document.getElementById("claseHora").focus();
 }
 
 // ========== VISTAS / NAVEGACIÓN ==========
@@ -631,9 +763,33 @@ function mostrarSeccion(id) {
   }
 }
 
+async function agregarReservaDesdeModal() {
+  const alumno_id = document.getElementById("selectAlumnoReserva").value;
+  if (!alumno_id) return alert("Elegí un alumno");
+
+  const res = await fetch(`${API_URL}/reservas`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      clase_id: modalReservas.dataset.claseId,
+      alumno_id
+    }),
+  });
+
+  const data = await res.json();
+  if (data.error) {
+    alert(data.error);
+    return;
+  }
+
+  cargarClases();
+  cargarEventosCalendar(calendar);
+  mostrarReservas(modalReservas.dataset.claseId);
+}
+
 // ========== INIT ==========
 cargarAlumnos();
 cargarPlanes();
 cargarClases();
 initCalendar();
-mostrarSeccion("calendarView");
+mostrarSeccion("dashboard");

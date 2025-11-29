@@ -2,16 +2,32 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-router.post('/', (req, res) => {
-  const { nombre, apellido, dni, telefono, email, fecha_nacimiento } = req.body;
+router.post("/", (req, res) => {
+  const { nombre, apellido, dni, telefono, email } = req.body;
+
+  if (!nombre || !apellido || !dni || !telefono || !email) {
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
+  }
+
+  const regexNombre = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{1,15}$/;
+  const regexDni = /^[0-9]{1,8}$/;
+  const regexTel = /^[0-9+]{1,15}$/;
+  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!regexNombre.test(nombre)) return res.status(400).json({ error: "Nombre inválido" });
+  if (!regexNombre.test(apellido)) return res.status(400).json({ error: "Apellido inválido" });
+  if (!regexDni.test(dni)) return res.status(400).json({ error: "DNI inválido" });
+  if (!regexTel.test(telefono)) return res.status(400).json({ error: "Teléfono inválido" });
+  if (!regexEmail.test(email)) return res.status(400).json({ error: "Email inválido" });
 
   const sql = `
-    INSERT INTO alumnos (nombre, apellido, dni, telefono, email, fecha_nacimiento)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO alumnos (nombre, apellido, dni, telefono, email)
+    VALUES (?, ?, ?, ?, ?)
   `;
-  db.run(sql, [nombre, apellido, dni, telefono, email, fecha_nacimiento], function(err) {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ id: this.lastID });
+
+  db.run(sql, [nombre, apellido, dni, telefono, email], function(err) {
+    if (err) return res.status(500).json({ error: "Error al guardar el alumno" });
+    res.json({ id: this.lastID, msg: "Alumno agregado con éxito" });
   });
 });
 
