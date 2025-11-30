@@ -81,6 +81,38 @@ router.get('/vencimientos', (req, res) => {
     res.json(rows);
   });
 });
+// 🔹 Vencimientos agrupados por semana
+router.get("/estadisticas/vencimientos", (req, res) => {
+  const sql = `
+    SELECT
+      strftime('%W', fecha_fin) AS semana,
+      COUNT(*) AS total
+    FROM suscripciones
+    WHERE estado='activa'
+    GROUP BY semana
+    ORDER BY semana ASC
+  `;
+
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+// Cerrar suscripción (estado = 'inactiva')
+router.put("/cerrar/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = `
+    UPDATE suscripciones
+    SET estado = 'inactiva'
+    WHERE id = ?
+  `;
+
+  db.run(sql, [id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Suscripción cerrada" });
+  });
+});
 
 
 module.exports = router;

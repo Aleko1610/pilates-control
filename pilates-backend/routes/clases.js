@@ -132,5 +132,27 @@ router.get("/dia/:fecha", (req, res) => {
   });
 });
 
+// 🔹 estadísticas últimos 7 días
+router.get("/estadisticas/ultimos7", (req, res) => {
+  const query = `
+    SELECT 
+      dia,
+      COUNT(*) AS cantidad_clases,
+      SUM(cupo_maximo) AS cupos_totales
+    FROM clases
+    WHERE dia >= DATE('now', '-7 day')
+    GROUP BY dia
+    ORDER BY dia ASC
+  `;
+
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error consultando estadísticas" });
+    }
+
+    res.json(rows);
+  });
+});
 
 module.exports = router;
