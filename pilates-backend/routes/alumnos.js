@@ -38,6 +38,7 @@ router.get('/', (req, res) => {
   });
 });
 
+
 router.put('/:id', (req, res) => {
   const { id } = req.params;
   const { nombre, apellido, dni, telefono, email } = req.body;

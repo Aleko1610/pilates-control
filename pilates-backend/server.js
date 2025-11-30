@@ -22,3 +22,7 @@ app.use('/reservas', reservasRoutes); // 🔹 acá van todas las reservas
 
 const PORT = 3001;
 app.listen(PORT, () => console.log(`Servidor funcionando en puerto ${PORT}`));
+
+app.get("/test", (req, res) => {
+  res.send("Ruta test OK");
+});

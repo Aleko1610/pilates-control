@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 
 function Alumnos() {
   const [alumnos, setAlumnos] = useState([]);
@@ -90,19 +92,36 @@ function Alumnos() {
           </tr>
         </thead>
         <tbody>
-          {alumnos.map(a => (
-            <tr key={a.id}>
-              <td>{a.nombre}</td>
-              <td>{a.apellido}</td>
-              <td>{a.dni}</td>
-              <td>{a.telefono}</td>
-              <td>{a.email}</td>
-              <td>
-                <button onClick={() => eliminarAlumno(a.id)} style={styles.deleteBtn}>❌</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+  {alumnos.map((a) => (
+    <tr key={a.id}>
+      <td>{a.nombre}</td>
+      <td>{a.apellido}</td>
+      <td>{a.dni}</td>
+      <td>{a.telefono}</td>
+      <td>{a.email}</td>
+
+      <td style={{ display: "flex", gap: "8px" }}>
+        <Link
+          to={`/alumnos/${a.id}`}
+          style={{
+            color: "#4da3ff",
+            textDecoration: "none",
+            fontWeight: "bold"
+          }}
+        >
+          Ver
+        </Link>
+
+        <button
+          onClick={() => eliminarAlumno(a.id)}
+          style={styles.deleteBtn}
+        >
+          ❌
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
       </table>
 
       {alumnos.length === 0 && <p>No hay alumnos cargados</p>}

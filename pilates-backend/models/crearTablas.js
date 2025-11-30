@@ -65,6 +65,23 @@ db.run(`
         FOREIGN KEY (alumno_id) REFERENCES alumnos(id)
       );
     `);
+
+    // Tabla de suscripciones
+db.run(`
+  CREATE TABLE IF NOT EXISTS suscripciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    alumno_id INTEGER NOT NULL,
+    plan_id INTEGER NOT NULL,
+    fecha_inicio TEXT NOT NULL,
+    fecha_fin TEXT,
+    creditos_actuales INTEGER DEFAULT 0,
+    estado TEXT DEFAULT 'activa',
+
+    FOREIGN KEY (alumno_id) REFERENCES alumnos(id),
+    FOREIGN KEY (plan_id) REFERENCES planes(id)
+  )
+`);
+
   });
 }
 

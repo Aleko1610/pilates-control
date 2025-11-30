@@ -2,12 +2,28 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Crear clase
+// Obtener todas las clases
+router.get('/', (req, res) => {
+  const sql = `
+    SELECT 
+      c.*,
+      (SELECT COUNT(*) FROM reservas r WHERE r.clase_id = c.id) AS ocupados
+    FROM clases c
+    ORDER BY dia ASC, hora ASC
+  `;
+
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// Crear una clase
 router.post('/', (req, res) => {
   const { dia, hora, cupo_maximo, profesor, tipo_clase } = req.body;
 
   if (!dia || !hora || !cupo_maximo || !profesor || !tipo_clase) {
-    return res.status(400).json({ error: "Faltan datos" });
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
   }
 
   const sql = `
@@ -17,48 +33,44 @@ router.post('/', (req, res) => {
 
   db.run(sql, [dia, hora, cupo_maximo, profesor, tipo_clase], function(err) {
     if (err) return res.status(500).json({ error: err.message });
-    res.json({ id: this.lastID, mensaje: "Clase creada" });
+    res.json({ id: this.lastID });
   });
 });
 
-// Listar clases
-router.get('/', (req, res) => {
-  db.all(`SELECT * FROM clases ORDER BY dia, hora`, [], (err, rows) => {
+// Clases por día (para el Dashboard)
+router.get('/dia/:fecha', (req, res) => {
+  const { fecha } = req.params;
+
+  const sql = `
+    SELECT 
+      c.*,
+      (SELECT COUNT(*) FROM reservas r WHERE r.clase_id = c.id) AS ocupados
+    FROM clases c
+    WHERE dia = ?
+    ORDER BY hora ASC
+  `;
+
+  db.all(sql, [fecha], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
 
-// Detalle de clase + alumnos inscriptos
+// Obtener una sola clase por ID
 router.get('/:id', (req, res) => {
   const { id } = req.params;
 
-  const sqlClase = `
-    SELECT c.*,
-    (SELECT COUNT(*) FROM reservas WHERE clase_id = c.id) AS ocupados
+  const sql = `
+    SELECT 
+      c.*,
+      (SELECT COUNT(*) FROM reservas r WHERE r.clase_id = c.id) AS ocupados
     FROM clases c
     WHERE c.id = ?
   `;
 
-  db.get(sqlClase, [id], (err, clase) => {
+  db.get(sql, [id], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
-    if (!clase) return res.status(404).json({ error: "Clase no encontrada" });
-
-    const sqlAlumnos = `
-      SELECT r.id AS reserva_id, a.*
-      FROM reservas r
-      JOIN alumnos a ON a.id = r.alumno_id
-      WHERE r.clase_id = ?
-    `;
-
-    db.all(sqlAlumnos, [id], (err2, alumnos) => {
-      if (err2) return res.status(500).json({ error: err2.message });
-
-      res.json({
-        ...clase,
-        alumnos
-      });
-    });
+    res.json(row);
   });
 });
 
@@ -73,33 +85,17 @@ router.put('/:id', (req, res) => {
     WHERE id = ?
   `;
 
-  db.run(sql, [dia, hora, cupo_maximo, profesor, tipo_clase, id], function(err) {
+  db.run(sql, [dia, hora, cupo_maximo, profesor, tipo_clase, id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ mensaje: "Clase actualizada" });
   });
 });
 
-// Mover clase (cambiar fecha/hora)
-router.patch('/:id/mover', (req, res) => {
-  const { start } = req.body;
-  const [dia, hora] = start.split("T");
-
-  const sql = `
-    UPDATE clases
-    SET dia = ?, hora = ?
-    WHERE id = ?
-  `;
-
-  db.run(sql, [dia, hora, req.params.id], function(err) {
-    if (err) return res.status(500).json({ error: "Error al mover clase" });
-    res.json({ mensaje: "Clase actualizada" });
-  });
-});
-
-// Eliminar clase (solo si no tiene reservas)
+// Eliminar clase
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
 
+  // Verifica que la clase no tenga reservas
   const sqlCheck = `
     SELECT COUNT(*) AS total
     FROM reservas
@@ -108,16 +104,33 @@ router.delete('/:id', (req, res) => {
 
   db.get(sqlCheck, [id], (err, row) => {
     if (row.total > 0) {
-      return res.status(400).json({
-        error: "No se puede eliminar: la clase tiene reservas"
-      });
+      return res.status(400).json({ error: "No se puede eliminar: clase con reservas" });
     }
 
-    db.run(`DELETE FROM clases WHERE id = ?`, [id], err => {
+    db.run(`DELETE FROM clases WHERE id = ?`, [id], (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ mensaje: "Clase eliminada" });
     });
   });
 });
+
+// Obtener clases por día
+router.get("/dia/:fecha", (req, res) => {
+  const { fecha } = req.params;
+
+  const sql = `
+    SELECT c.*,
+           (SELECT COUNT(*) FROM reservas r WHERE r.clase_id = c.id) AS reservados
+    FROM clases c
+    WHERE c.dia = ?
+    ORDER BY c.hora ASC
+  `;
+
+  db.all(sql, [fecha], (err, rows) => {
+    if (err) return res.status(500).json({ error: "Error obteniendo clases por fecha" });
+    res.json(rows);
+  });
+});
+
 
 module.exports = router;

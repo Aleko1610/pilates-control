@@ -1,162 +1,225 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-function ClaseDetalle() {
+export default function ClaseDetalle() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [clase, setClase] = useState(null);
   const [alumnos, setAlumnos] = useState([]);
-  const [selectedAlumno, setSelectedAlumno] = useState("");
+  const [reservas, setReservas] = useState([]);
+
+  const [alumnoSeleccionado, setAlumnoSeleccionado] = useState("");
 
   useEffect(() => {
     cargarClase();
     cargarAlumnos();
+    cargarReservas();
   }, []);
 
-  const cargarClase = () => {
-    fetch(`http://localhost:3001/clases/${id}`)
-      .then(res => res.json())
-      .then(data => setClase(data))
-      .catch(err => console.error(err));
+  const cargarClase = async () => {
+    const res = await fetch(`http://localhost:3001/clases/${id}`);
+    const data = await res.json();
+    setClase(data);
   };
 
-  const cargarAlumnos = () => {
-    fetch("http://localhost:3001/alumnos")
-      .then(res => res.json())
-      .then(data => setAlumnos(data))
-      .catch(err => console.error(err));
+  const cargarAlumnos = async () => {
+    const res = await fetch("http://localhost:3001/alumnos");
+    const data = await res.json();
+    setAlumnos(data);
   };
 
-  const agregarReserva = () => {
-    if (!selectedAlumno) return alert("Selecciona un alumno");
+  const cargarReservas = async () => {
+    const res = await fetch(`http://localhost:3001/reservas/clase/${id}`);
+    const data = await res.json();
+    setReservas(data);
+  };
 
-    fetch("http://localhost:3001/reservas", {
+  const agregarReserva = async () => {
+    if (!alumnoSeleccionado) {
+      alert("Seleccioná un alumno");
+      return;
+    }
+
+    const res = await fetch("http://localhost:3001/reservas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clase_id: Number(id), alumno_id: Number(selectedAlumno) })
-    })
-      .then(res => res.json())
-      .then(() => {
-        setSelectedAlumno("");
-        cargarClase();
-      })
-      .catch(err => console.error(err));
+      body: JSON.stringify({
+        clase_id: id,
+        alumno_id: alumnoSeleccionado,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+
+    setAlumnoSeleccionado("");
+    cargarClase();
+    cargarReservas();
   };
 
-  const eliminarReserva = (reserva_id) => {
-    fetch(`http://localhost:3001/reservas/${reserva_id}`, {
-      method: "DELETE"
-    })
-      .then(res => res.json())
-      .then(() => cargarClase())
-      .catch(err => console.error(err));
+  const eliminarReserva = async (reserva_id) => {
+    if (!confirm("¿Eliminar reserva?")) return;
+
+    await fetch(`http://localhost:3001/reservas/${reserva_id}`, {
+      method: "DELETE",
+    });
+
+    cargarClase();
+    cargarReservas();
   };
 
-  if (!clase) return <p style={{ padding: 20 }}>Cargando...</p>;
+  const marcarPresente = async (reserva_id, presente) => {
+    await fetch(`http://localhost:3001/reservas/${reserva_id}/presente`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ presente }),
+    });
+
+    cargarReservas();
+  };
+
+  if (!clase) return <p style={{ color: "#fff" }}>Cargando...</p>;
 
   return (
     <div style={styles.container}>
-      <Link to="/clases" style={styles.volverBtn}>← Volver</Link>
-
-      <h2>Clase: {clase.tipo_clase}</h2>
-      <p><strong>{clase.dia} - {clase.hora}</strong></p>
-      <p>Profesor: {clase.profesor}</p>
-      <p>Cupo: {clase.ocupados} / {clase.cupo_maximo}</p>
-
-      <hr style={{ borderColor: "#555" }} />
-
-      <h3>Alumnos inscriptos</h3>
-
-      {clase.alumnos.length === 0 ? (
-        <p>No hay inscriptos todavía</p>
-      ) : (
-        <ul style={styles.lista}>
-          {clase.alumnos.map(al => (
-            <li key={al.reserva_id} style={styles.item}>
-              {al.nombre} {al.apellido}
-              <button
-                style={styles.btnEliminar}
-                onClick={() => eliminarReserva(al.reserva_id)}
-              >
-                X
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <h4>Agregar alumno</h4>
-      <select
-        value={selectedAlumno}
-        onChange={(e) => setSelectedAlumno(e.target.value)}
-        style={styles.input}
-      >
-        <option value="">Seleccione...</option>
-        {alumnos.map(a => (
-          <option key={a.id} value={a.id}>
-            {a.nombre} {a.apellido}
-          </option>
-        ))}
-      </select>
-      <button style={styles.okBtn} onClick={agregarReserva}>
-        Agregar
+      <button onClick={() => navigate(-1)} style={styles.backBtn}>
+        ← Volver
       </button>
+
+      <h2>Clase {clase.tipo_clase}</h2>
+
+      <div style={styles.card}>
+        <p><b>Día:</b> {clase.dia}</p>
+        <p><b>Hora:</b> {clase.hora}</p>
+        <p><b>Profesor:</b> {clase.profesor}</p>
+        <p>
+          <b>Cupo:</b> {clase.ocupados}/{clase.cupo_maximo}
+        </p>
+      </div>
+
+      <div style={styles.card}>
+        <h3>Agregar Alumno</h3>
+
+        <div style={styles.addReservaBox}>
+          <select
+            value={alumnoSeleccionado}
+            onChange={(e) => setAlumnoSeleccionado(e.target.value)}
+            style={styles.input}
+          >
+            <option value="">Seleccionar...</option>
+            {alumnos.map(a => (
+              <option key={a.id} value={a.id}>
+                {a.nombre} {a.apellido}
+              </option>
+            ))}
+          </select>
+
+          <button onClick={agregarReserva} style={styles.okBtn}>
+            Agregar
+          </button>
+        </div>
+      </div>
+
+      <div style={styles.card}>
+        <h3>Reservas</h3>
+
+        {reservas.length === 0 && <p>No hay alumnos inscriptos.</p>}
+
+        {reservas.length > 0 && (
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Presente</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+
+              {reservas.map(r => (
+                <tr key={r.id}>
+                  <td>{r.nombre} {r.apellido}</td>
+
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={r.presente === 1}
+                      onChange={(e) =>
+                        marcarPresente(r.id, e.target.checked ? 1 : 0)
+                      }
+                    />
+                  </td>
+
+                  <td>
+                    <button
+                      onClick={() => eliminarReserva(r.id)}
+                      style={styles.deleteBtn}
+                    >
+                      ❌
+                    </button>
+                  </td>
+                </tr>
+              ))}
+
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    padding: "20px",
-    color: "#fff"
-  },
-  volverBtn: {
-    display: "inline-block",
-    marginBottom: "15px",
+  container: { padding: 20, color: "#fff" },
+  backBtn: {
     background: "#444",
-    padding: "8px 12px",
-    borderRadius: "6px",
     color: "#fff",
-    textDecoration: "none"
-  },
-  lista: {
-    padding: 0,
-    listStyle: "none",
-    marginBottom: "10px"
-  },
-  item: {
-    background: "#1c1c1c",
-    marginBottom: "6px",
-    padding: "6px",
-    borderRadius: "6px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center"
-  },
-  btnEliminar: {
-    background: "#dc3545",
+    padding: "6px 12px",
     border: "none",
-    padding: "4px 8px",
-    borderRadius: "5px",
-    color: "#fff",
-    cursor: "pointer"
+    borderRadius: 5,
+    cursor: "pointer",
+    marginBottom: 20,
+  },
+  card: {
+    background: "#222",
+    padding: 20,
+    borderRadius: 10,
+    marginBottom: 25,
+  },
+  addReservaBox: {
+    display: "flex",
+    gap: 10,
   },
   input: {
-    padding: "8px",
-    borderRadius: "6px",
-    border: "1px solid #444",
-    background: "#1c1c1c",
+    padding: 10,
+    background: "#111",
+    border: "1px solid #555",
     color: "#fff",
-    marginRight: "10px"
+    borderRadius: 5,
   },
   okBtn: {
+    padding: "10px 14px",
     background: "#28a745",
     border: "none",
     color: "#fff",
-    padding: "8px 12px",
-    borderRadius: "6px",
-    cursor: "pointer"
-  }
+    borderRadius: 5,
+    cursor: "pointer",
+  },
+  deleteBtn: {
+    padding: "6px 10px",
+    background: "#d9534f",
+    color: "#fff",
+    border: "none",
+    borderRadius: 5,
+    cursor: "pointer",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
 };
-
-export default ClaseDetalle;
