@@ -35,7 +35,7 @@ export default function ClaseDetalle() {
     setReservas(data);
   };
 
-  const agregarReserva = async () => {
+  const agregarReserva = async (alumno_id) => {
     if (!alumnoSeleccionado) {
       alert("Seleccioná un alumno");
       return;
@@ -105,24 +105,32 @@ export default function ClaseDetalle() {
       <div style={styles.card}>
         <h3>Agregar Alumno</h3>
 
-        <div style={styles.addReservaBox}>
-          <select
-            value={alumnoSeleccionado}
-            onChange={(e) => setAlumnoSeleccionado(e.target.value)}
-            style={styles.input}
-          >
-            <option value="">Seleccionar...</option>
-            {alumnos.map(a => (
-              <option key={a.id} value={a.id}>
-                {a.nombre} {a.apellido}
-              </option>
-            ))}
-          </select>
+        <h3>Alumnos disponibles</h3>
+<div style={styles.listBox}>
+  {alumnos
+    .filter(a => !reservas.find(r => r.id_alumno === a.id))
+    .map(a => (
+      <button
+        key={a.id}
+        onClick={() => agregarReserva(a.id)}
+        style={{
+          ...styles.alumnoItem,
+          background:
+            clase.ocupados >= clase.cupo_maximo ? "#444" : "#007bff",
+          cursor:
+            clase.ocupados >= clase.cupo_maximo ? "not-allowed" : "pointer"
+        }}
+        disabled={clase.ocupados >= clase.cupo_maximo}
+      >
+        {a.nombre} {a.apellido}
+      </button>
+    ))}
 
-          <button onClick={agregarReserva} style={styles.okBtn}>
-            Agregar
-          </button>
-        </div>
+  {clase.ocupados >= clase.cupo_maximo && (
+    <p>No quedan cupos disponibles</p>
+  )}
+</div>
+
       </div>
 
       <div style={styles.card}>
@@ -222,4 +230,17 @@ const styles = {
     width: "100%",
     borderCollapse: "collapse",
   },
+  listBox: {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+  gap: 10,
+  marginTop: 10,
+},
+alumnoItem: {
+  padding: "10px",
+  borderRadius: 6,
+  color: "#fff",
+  border: "none",
+  textAlign: "center",
+}
 };

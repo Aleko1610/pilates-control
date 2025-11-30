@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// Obtener todas las clases
+// Obtener todas las clases con ocupación real
 router.get('/', (req, res) => {
   const sql = `
     SELECT 
@@ -18,7 +18,7 @@ router.get('/', (req, res) => {
   });
 });
 
-// Crear una clase
+// Crear clase
 router.post('/', (req, res) => {
   const { dia, hora, cupo_maximo, profesor, tipo_clase } = req.body;
 
@@ -37,7 +37,7 @@ router.post('/', (req, res) => {
   });
 });
 
-// Clases por día (para el Dashboard)
+// Clases por día (para Dashboard y filtros)
 router.get('/dia/:fecha', (req, res) => {
   const { fecha } = req.params;
 
@@ -56,7 +56,7 @@ router.get('/dia/:fecha', (req, res) => {
   });
 });
 
-// Obtener una sola clase por ID
+// Obtener una sola clase
 router.get('/:id', (req, res) => {
   const { id } = req.params;
 
@@ -91,11 +91,10 @@ router.put('/:id', (req, res) => {
   });
 });
 
-// Eliminar clase
+// Eliminar clase solo si no tiene reservas
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
 
-  // Verifica que la clase no tenga reservas
   const sqlCheck = `
     SELECT COUNT(*) AS total
     FROM reservas
@@ -114,26 +113,8 @@ router.delete('/:id', (req, res) => {
   });
 });
 
-// Obtener clases por día
-router.get("/dia/:fecha", (req, res) => {
-  const { fecha } = req.params;
-
-  const sql = `
-    SELECT c.*,
-           (SELECT COUNT(*) FROM reservas r WHERE r.clase_id = c.id) AS reservados
-    FROM clases c
-    WHERE c.dia = ?
-    ORDER BY c.hora ASC
-  `;
-
-  db.all(sql, [fecha], (err, rows) => {
-    if (err) return res.status(500).json({ error: "Error obteniendo clases por fecha" });
-    res.json(rows);
-  });
-});
-
-// 🔹 estadísticas últimos 7 días
-router.get("/estadisticas/ultimos7", (req, res) => {
+// 🔹 Estadísticas últimos 7 días
+router.get('/estadisticas/ultimos7', (req, res) => {
   const query = `
     SELECT 
       dia,

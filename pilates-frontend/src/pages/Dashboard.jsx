@@ -54,7 +54,14 @@ export default function Dashboard() {
         setOcupacionHoy(porcentaje);
       }
 
-      renderOcupacionChart([30, 50, 80, 40, 70, 90, 60]); // demo
+      const res4 = await fetch("http://localhost:3001/reservas/estadisticas/ultimos7");
+const datosOcupacion = await res4.json();
+
+const labels = datosOcupacion.map(d => d.dia.slice(5)); // mm-dd
+const valores = datosOcupacion.map(d => d.porcentaje);
+
+renderOcupacionChart(valores);
+
     } catch (error) {
       console.error("Error Dashboard:", error);
     }

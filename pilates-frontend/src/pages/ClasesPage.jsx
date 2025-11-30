@@ -100,7 +100,9 @@ function ClasesPage() {
             <h3 style={styles.cardTitle}>{clase.tipo_clase}</h3>
             <p>{clase.dia} - {clase.hora}</p>
             <p><strong>{clase.profesor}</strong></p>
-            <div style={styles.cupoBox}>Cupo: {clase.cupo_maximo}</div>
+            <div style={styles.cupoBox}>
+  Cupo: {clase.ocupados}/{clase.cupo_maximo}
+</div>
 
             <Link to={`/clases/${clase.id}`} style={styles.btn}>
               Ver detalles
